@@ -142,6 +142,7 @@ The procedural filters remain the active product implementation. A separate rese
 Current decision:
 
 - Primary future target: official TensorFlow Lite arbitrary image stylization, int8 model pair.
+- Phase 1J-A license gate: blocked until the exact model binary license and redistribution terms are confirmed.
 - No model binary has been committed.
 - No TensorFlow Lite dependency has been added.
 - No ML filter is exposed in the app.
@@ -151,7 +152,7 @@ Current decision:
 - No runtime downloads are allowed.
 - No public filter label may use artist names.
 
-See `docs/ML_STYLE_TRANSFER_RESEARCH.md` for the candidate matrix.
+See `docs/ML_STYLE_TRANSFER_RESEARCH.md` for the candidate matrix and `docs/THIRD_PARTY_LICENSES.md` for the license gate ledger.
 
 ## 0.1.0 Calibration
 

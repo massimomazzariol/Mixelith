@@ -12,6 +12,28 @@ This document records the current state of the **Mixelith** project.
 - Windows: Development preview.
 - Core Principles: No backend, no login, no ads, no analytics, no Firebase, no machine learning in 0.1.0, no share sheet in 0.1.0, no `android.permission.INTERNET` permission.
 
+## [2026-05-29] - Phase 1J-A: Style Transfer License Gate
+
+### Completed Activities
+
+- Re-checked the official TensorFlow Lite arbitrary image stylization int8 model pair before adding any model or dependency.
+- Reviewed the TensorFlow Lite mobile style transfer material, the official TensorFlow examples Android sample, the sample model download script, and Kaggle model metadata documentation.
+- Created `docs/THIRD_PARTY_LICENSES.md` as the third-party model and asset license ledger.
+- Documented exact official int8 model URLs and observed file sizes:
+  - prediction model: 2,828,838 bytes;
+  - transfer model: 284,398 bytes.
+- Confirmed that sample code and the Gradle download script are Apache-2.0, but did not find an explicit enough license statement for the model binaries themselves.
+
+### Decision
+
+License gate blocked. No model binary, style reference asset, `tflite_flutter` dependency, inference code, or experimental ML filter was added.
+
+### Risks and Pending Tasks
+
+- Obtain an authoritative license statement or explicit approval for the exact `.tflite` model binaries.
+- If approval is obtained, generate project-owned abstract style reference assets and run an isolated `lib/filters/ml/` spike.
+- Keep procedural filters available regardless of future ML work.
+
 ## [2026-05-29] - Research Spike: Offline Style Transfer Models
 
 ### Completed Activities

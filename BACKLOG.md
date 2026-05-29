@@ -1,6 +1,6 @@
 # Backlog
 
-Current Phase: **Phase 1J: multi-photo selection**.
+Current Phase: **Phase 1J-A: ML style transfer license gate**.
 
 ## Must For 0.1.0
 
@@ -35,7 +35,7 @@ Current Phase: **Phase 1J: multi-photo selection**.
 
 ## Should
 
-- Confirm redistribution terms for the official TensorFlow Lite style transfer model files before committing any model binary.
+- Confirm redistribution terms for the official TensorFlow Lite style transfer model files before committing any model binary. Phase 1J-A rechecked this and the gate remains blocked.
 - Run an isolated `tflite_flutter` code spike with the int8 TensorFlow Lite style transfer model pair after model approval.
 - Evaluate whether on-device style transfer changes the 0.1.0 scope or remains a later track.
 - Evaluate native Android Photo Picker for true limited/single-photo access.

@@ -16,6 +16,7 @@ Phase 1F Export JPEG/PNG, re-encode, and gal               Completed
 Phase 1G Android emulator validation on API 36             Completed
 Phase 1H 0.1.0 scope realignment                           Completed
 Phase 1I Camera capture                                    Completed
+Phase 1J-A ML style transfer license gate                  Blocked
 Phase 1J Multi-photo selection                             Next
 Phase 1K Filter stack and clear all                        Planned
 Phase 1L Filter calibration and thumbnails                  Planned
@@ -145,6 +146,23 @@ Out of Scope for 0.1.0:
 - Advanced batch processing.
 - Reordering photos.
 - Advanced individual editing in batch mode.
+
+## Phase 1J-A: ML Style Transfer License Gate
+
+Objective: Confirm whether the official TensorFlow Lite arbitrary image stylization model pair can be safely committed and used as an offline Android spike.
+
+Status: Blocked.
+
+Findings:
+
+- The official TensorFlow Lite model pair remains the best technical candidate for on-device artistic style transfer.
+- The exact model files and sizes are documented in `docs/ML_STYLE_TRANSFER_RESEARCH.md`.
+- The sample code license is clear, but the model binary redistribution and app-use terms remain unclear.
+- No `tflite_flutter` dependency, model binary, style reference asset, inference code, or experimental filter was added.
+
+Next action:
+
+- Obtain an authoritative license statement or explicit approval for the exact model binaries before starting an implementation spike.
 
 ## Phase 1K: Filter Stack and Clear All
 

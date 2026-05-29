@@ -206,6 +206,9 @@ The earlier emulator check only confirmed that an exported JPEG did not contain 
 If an offline style transfer spike is approved later, validate it before any product exposure:
 
 - Confirm source and redistribution terms for every model binary.
+- Confirm the exact binary license, not only the sample code license.
+- Confirm public repository redistribution and app use are explicitly allowed.
+- Record attribution and notice requirements in `docs/THIRD_PARTY_LICENSES.md`.
 - Confirm every model is bundled as an asset, not downloaded at runtime.
 - Confirm `android.permission.INTERNET` remains absent.
 - Confirm Windows preview either works or fails gracefully without breaking the app.
@@ -215,6 +218,8 @@ If an offline style transfer spike is approved later, validate it before any pro
 - Measure processing time and memory on a mid-range Android device.
 - Verify export still re-encodes output without copying original metadata.
 - Keep procedural filters available as fallback.
+
+Phase 1J-A result: the official TensorFlow Lite arbitrary image stylization int8 model pair remains technically promising, but its binary redistribution terms were not confirmed. No model, dependency, or experimental filter should be tested until that gate passes.
 
 ## V0.1.0 Checklist
 

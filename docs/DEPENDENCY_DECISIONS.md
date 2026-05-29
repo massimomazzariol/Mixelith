@@ -57,7 +57,8 @@ Status: **researched, not added**.
 - Required Adapter: Yes, under `lib/filters/ml/`.
 - UI rule: No UI file may import `tflite_flutter`.
 - Runtime rule: No model downloads at runtime and no `android.permission.INTERNET`.
-- Current blocker: The exact model binary redistribution/license terms for the selected TFLite files must be confirmed before committing model assets.
+- Phase 1J-A status: License gate still blocked.
+- Current blocker: The exact model binary redistribution/license terms for the selected TFLite files remain unknown.
 - Decision: Do not add the dependency until model files are approved and an isolated code spike is authorized.
 
 ## Excluded or Postponed Dependencies
@@ -100,10 +101,11 @@ Status: **researched, not added**.
 
 - Evaluated official TensorFlow Lite artistic style transfer, TensorFlow Hub/Kaggle handles, TensorFlow examples, selected Flutter/GitHub wrappers, Hugging Face candidates, ONNX Model Zoo, and MicroAST.
 - Primary target selected for a future code spike: official TensorFlow Lite arbitrary image stylization int8 model pair.
+- Phase 1J-A re-checked the license gate and kept it blocked because the model binary license and redistribution terms were not explicit enough.
 - No dependency was added.
 - No model file was committed.
 - No product filter was exposed.
-- See `docs/ML_STYLE_TRANSFER_RESEARCH.md`.
+- See `docs/ML_STYLE_TRANSFER_RESEARCH.md` and `docs/THIRD_PARTY_LICENSES.md`.
 
 ## Operational Rule
 

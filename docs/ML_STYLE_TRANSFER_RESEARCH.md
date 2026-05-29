@@ -53,13 +53,39 @@ This spike did **not** add `tflite_flutter`, did **not** commit model binaries, 
 
 Reason: the official sample code license is clear, but this spike did not find an independently clear license page for the model binary files themselves that is suitable for committing them to this repository. The model source URLs and sizes are documented, but the binary license must be confirmed before adding model files.
 
-Next safe step:
+## Phase 1J-A License Gate
 
-1. Confirm the license and redistribution terms for the exact TFLite model files.
+The Phase 1J-A license gate re-checked the official TensorFlow Lite arbitrary image stylization int8 model pair before any model or dependency integration.
+
+Exact int8 model URLs reviewed:
+
+- Prediction model: `https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/style_transfer/android/magenta_arbitrary-image-stylization-v1-256_int8_prediction_1.tflite`
+- Transfer model: `https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/style_transfer/android/magenta_arbitrary-image-stylization-v1-256_int8_transfer_1.tflite`
+
+Findings:
+
+- The TensorFlow blog confirms the model is intended for mobile TensorFlow Lite use and that int8 and fp16 versions are available through TensorFlow Hub.
+- The official TensorFlow examples Android sample includes a Gradle download script for these exact storage URLs.
+- The TensorFlow examples repository and the Gradle script are Apache-2.0 licensed.
+- The accessible Kaggle model metadata documentation confirms that Kaggle model records support a `licenseName` field, but the public target model page did not expose a clear license value for the exact `.tflite` binaries during this gate.
+- The binary files were reachable and their sizes were confirmed by HTTP HEAD:
+  - int8 prediction: 2,828,838 bytes;
+  - int8 transfer: 284,398 bytes.
+
+Gate result: **blocked**.
+
+Reason: the sample code license and model hosting are official, but the exact binary license, public GitHub redistribution permission, app-use permission, and attribution requirements for the model files are still not explicit enough to satisfy Mixelith's repository policy.
+
+No model file, style reference asset, ML dependency, inference code, or experimental ML filter was added.
+
+Next safe steps:
+
+1. Obtain an authoritative license statement for the exact TFLite model binaries, or explicit approval from the rights holder/source.
 2. If acceptable, download the int8 prediction and transfer models into `assets/models/style_transfer/`.
 3. Add `tflite_flutter` behind `lib/filters/ml/`.
-4. Build a minimal tensor-inspection and inference runner.
-5. Keep the feature experimental until Android performance and output quality are validated.
+4. Generate project-owned abstract style references, with ownership documented.
+5. Build a minimal tensor-inspection and inference runner.
+6. Keep the feature experimental until Android performance and output quality are validated.
 
 ## Proposed Architecture If Approved
 
@@ -102,4 +128,6 @@ Rules:
 
 ## Current Decision
 
-Do not integrate yet. The recommended next action is to request explicit approval to use the official TensorFlow Lite model files after confirming redistribution terms, then run a code spike with `tflite_flutter` and the int8 model pair.
+Do not integrate yet. The recommended next action is to obtain a clean license source or explicit written approval for the exact official TensorFlow Lite model files, then run a code spike with `tflite_flutter` and the int8 model pair.
+
+See `docs/THIRD_PARTY_LICENSES.md` for the license gate ledger.
