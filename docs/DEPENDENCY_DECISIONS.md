@@ -26,10 +26,11 @@ Every new dependency must be evaluated before modifying `pubspec.yaml`.
 | `color_filter_extension` | Fast color matrices | Approved | Behind color engines |
 | `gal` | Gallery saving on Android | Approved | Behind export adapters |
 | `camera` | Android camera capture | Approved in Phase 1I | Only inside `features/camera/` |
+| `tflite_flutter` | Local-only TensorFlow Lite style transfer spike | Approved for isolated spike | Only inside `filters/ml/` |
 
 ## Planned Dependencies for 0.1.0
 
-No additional dependencies are planned before a subsequent technical decision.
+No additional product dependency is planned before a subsequent technical decision. `tflite_flutter` is present only for a local experimental spike and does not make ML part of the 0.1.0 product scope.
 
 Camera capture decision:
 
@@ -45,21 +46,22 @@ Camera capture decision:
 - Video capture and audio remain out of scope.
 - `CameraController` must use `enableAudio: false`.
 
-## Proposed Dependency: `tflite_flutter`
+## Local Spike Dependency: `tflite_flutter`
 
-Status: **researched, not added**.
+Status: **approved for a local isolated spike and added**.
 
 - Purpose: Potential offline TensorFlow Lite inference for artistic style transfer.
-- Proposed phase: Future isolated ML style transfer spike.
+- Phase: 1J-B local-only spike.
 - Publisher: `tensorflow.org` on pub.dev.
 - License: Apache-2.0 for the package.
-- Why considered: It is the likely Flutter bridge for bundled TFLite models and supports Android execution without cloud inference.
+- Why approved for spike: It is the likely Flutter bridge for bundled TFLite models and supports Android execution without cloud inference.
 - Required Adapter: Yes, under `lib/filters/ml/`.
 - UI rule: No UI file may import `tflite_flutter`.
 - Runtime rule: No model downloads at runtime and no `android.permission.INTERNET`.
-- Phase 1J-A status: License gate still blocked.
-- Current blocker: The exact model binary redistribution/license terms for the selected TFLite files remain unknown.
-- Decision: Do not add the dependency until model files are approved and an isolated code spike is authorized.
+- Model rule: The selected model binaries are not committed and are ignored by Git.
+- Windows rule: Windows preview must continue to build; ML inference can remain Android-only until native desktop runtime support is validated.
+- License status: The selected model binary redistribution terms remain unknown, so public bundling is still blocked.
+- Decision: Keep the dependency isolated and disabled by default unless local model files are present.
 
 ## Excluded or Postponed Dependencies
 
@@ -102,11 +104,11 @@ Status: **researched, not added**.
 - Evaluated official TensorFlow Lite artistic style transfer, TensorFlow Hub/Kaggle handles, TensorFlow examples, selected Flutter/GitHub wrappers, Hugging Face candidates, ONNX Model Zoo, and MicroAST.
 - Primary target selected for a future code spike: official TensorFlow Lite arbitrary image stylization int8 model pair.
 - Phase 1J-A re-checked the license gate and kept it blocked because the model binary license and redistribution terms were not explicit enough.
-- No dependency was added.
+- Phase 1J-B added `tflite_flutter` for a local-only spike.
 - No model file was committed.
 - No product filter was exposed.
 - See `docs/ML_STYLE_TRANSFER_RESEARCH.md` and `docs/THIRD_PARTY_LICENSES.md`.
 
 ## Operational Rule
 
-If any dependency introduces network features, logins, analytics, ads, Firebase, ML, or share sheets, it must be rejected for 0.1.0.
+If any dependency introduces network features, logins, analytics, ads, Firebase, product ML features, or share sheets, it must be rejected for 0.1.0. Local experimental ML code may exist only behind isolated, disabled-by-default spike paths.

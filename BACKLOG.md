@@ -1,6 +1,6 @@
 # Backlog
 
-Current Phase: **Phase 1J-A: ML style transfer license gate**.
+Current Phase: **Phase 1J-B: local ML style transfer spike**.
 
 ## Must For 0.1.0
 
@@ -36,7 +36,8 @@ Current Phase: **Phase 1J-A: ML style transfer license gate**.
 ## Should
 
 - Confirm redistribution terms for the official TensorFlow Lite style transfer model files before committing any model binary. Phase 1J-A rechecked this and the gate remains blocked.
-- Run an isolated `tflite_flutter` code spike with the int8 TensorFlow Lite style transfer model pair after model approval.
+- Run local-only style transfer testing with ignored model files using `scripts/download_style_transfer_models.ps1`.
+- Validate the isolated `tflite_flutter` spike on Android after local models are downloaded.
 - Evaluate whether on-device style transfer changes the 0.1.0 scope or remains a later track.
 - Evaluate native Android Photo Picker for true limited/single-photo access.
 - Validate metadata scrub with dedicated EXIF tool on exported JPEG and PNG.

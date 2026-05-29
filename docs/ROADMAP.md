@@ -17,6 +17,7 @@ Phase 1G Android emulator validation on API 36             Completed
 Phase 1H 0.1.0 scope realignment                           Completed
 Phase 1I Camera capture                                    Completed
 Phase 1J-A ML style transfer license gate                  Blocked
+Phase 1J-B Local style transfer experiment                 Experimental
 Phase 1J Multi-photo selection                             Next
 Phase 1K Filter stack and clear all                        Planned
 Phase 1L Filter calibration and thumbnails                  Planned
@@ -163,6 +164,25 @@ Findings:
 Next action:
 
 - Obtain an authoritative license statement or explicit approval for the exact model binaries before starting an implementation spike.
+
+## Phase 1J-B: Local Style Transfer Experiment
+
+Objective: Allow local developer testing of the official TensorFlow Lite int8 style transfer model pair without committing model binaries.
+
+Status: Experimental.
+
+Deliverables:
+
+- `tflite_flutter` added behind `lib/filters/ml/`.
+- Model binaries ignored by Git.
+- Local PowerShell download script for the official int8 model pair.
+- Project-generated abstract style references.
+- Missing-model fallback that keeps procedural filters working.
+- No experimental ML filters exposed in normal UI until inference is locally validated.
+
+Product rule:
+
+- Public release with bundled models remains blocked until redistribution and app-use terms are confirmed.
 
 ## Phase 1K: Filter Stack and Clear All
 

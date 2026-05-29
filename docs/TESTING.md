@@ -221,6 +221,31 @@ If an offline style transfer spike is approved later, validate it before any pro
 
 Phase 1J-A result: the official TensorFlow Lite arbitrary image stylization int8 model pair remains technically promising, but its binary redistribution terms were not confirmed. No model, dependency, or experimental filter should be tested until that gate passes.
 
+## Local ML Style Transfer Spike
+
+Phase 1J-B allows local developer testing without committing model binaries.
+
+```powershell
+.\scripts\download_style_transfer_models.ps1
+flutter pub get
+flutter run -d <android-device-id>
+```
+
+Checklist:
+
+- Confirm the downloaded files exist locally:
+  - `assets/models/style_transfer/style_prediction_int8.tflite`
+  - `assets/models/style_transfer/style_transfer_int8.tflite`
+- Confirm `git status --short` does not list the `.tflite` files.
+- Open or capture a photo.
+- Run the local ML engine through the isolated spike path.
+- If inference succeeds, inspect output quality and processing time.
+- If inference fails, record tensor summary and error message.
+- Do not commit downloaded model files.
+- Keep `android.permission.INTERNET` absent.
+
+Normal repository checks must pass without downloaded model files.
+
 ## V0.1.0 Checklist
 
 0.1.0 stable requires validation beyond the current technical MVP.

@@ -51,3 +51,12 @@ app.*.map.json
 /android/app/build/
 /android/.gradle/
 /windows/flutter/ephemeral/
+
+# Local ML style-transfer evaluation files.
+# Model redistribution is not confirmed, so these files must stay local.
+/assets/models/style_transfer/*.tflite
+/assets/models/style_transfer/*.lite
+/assets/models/style_transfer/*.onnx
+/assets/style_references/third_party/*
+/.local/models/
+/.local/style_references/

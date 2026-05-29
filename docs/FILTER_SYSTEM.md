@@ -144,8 +144,9 @@ Current decision:
 - Primary future target: official TensorFlow Lite arbitrary image stylization, int8 model pair.
 - Phase 1J-A license gate: blocked until the exact model binary license and redistribution terms are confirmed.
 - No model binary has been committed.
-- No TensorFlow Lite dependency has been added.
+- `tflite_flutter` has been added only for an isolated local spike.
 - No ML filter is exposed in the app.
+- The local ML engine returns a controlled unavailable result when model files are missing.
 - Any future ML engine must live under `lib/filters/ml/` or an equivalent isolated adapter layer.
 - UI code must not import ML runtimes.
 - Existing procedural presets must remain available as fallback.
@@ -180,7 +181,8 @@ The current filters are a technical base but must be calibrated on real photos f
 
 ## 0.1.0 Constraints
 
-- Do not implement machine learning.
+- Do not ship machine learning as a 0.1.0 product feature.
+- Local ML spike code may exist behind disabled, model-present-only paths; it is not part of the 0.1.0 product scope until separately approved.
 - Do not introduce GPU libraries or shaders in production.
 - Do not introduce `flutter_mosaic` or `flutter_image_filters` in 0.1.0.
 - Do not promise constant performance for massive images.

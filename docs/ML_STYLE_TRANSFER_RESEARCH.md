@@ -25,7 +25,7 @@ Hard requirements:
 | TensorFlow Lite Artistic Style Transfer, fp16 | [TensorFlow blog](https://blog.tensorflow.org/2020/04/optimizing-style-transfer-to-run-on-mobile-with-tflite.html) | Official | TFLite | Yes | Yes, especially with GPU delegate | Yes | Sample code Apache-2.0; model binary license not independently verified in this spike | Prediction 4.71 MB, transfer 0.42 MB by HTTP HEAD | Potentially better than int8 | Medium-high | Research later | Larger and likely better with GPU delegate. CPU-first int8 is the safer first spike. |
 | TensorFlow Hub / Kaggle arbitrary image stylization | [TF Hub handle in TensorFlow overview](https://www.tensorflow.org/lite/examples/style_transfer/overview) | TF Hub / Kaggle | TF Hub SavedModel or TFLite handles | Yes if downloaded and bundled | TFLite variant appears Android-ready | Yes | Unclear from accessible model page in this spike | Same TFLite sizes when using the lite handles | Promising | Medium | Try after license confirmation | Useful source for model download handles. Do not fetch at runtime. |
 | TensorFlow examples Android app | [GitHub example](https://github.com/tensorflow/examples/tree/master/lite/examples/style_transfer/android), [README](https://raw.githubusercontent.com/tensorflow/examples/master/lite/examples/style_transfer/android/README.md), [license](https://raw.githubusercontent.com/tensorflow/examples/master/LICENSE) | Official GitHub | Native Android TFLite | Yes | Yes | Gradle downloads models | Example code Apache-2.0; model binary license still needs confirmation | Not directly committed by the sample | Good reference implementation | Medium | Use as implementation reference | Confirms Android flow, two-model pipeline, background execution, and physical-device expectation. |
-| `tflite_flutter` | [pub.dev package](https://pub.dev/packages/tflite_flutter) | Flutter package | TFLite | Yes | Yes | No model included | Apache-2.0 | Package only | Depends on selected model | Medium | Proposed dependency, not added in this spike | Published by `tensorflow.org`, supports Android and desktop, and is the likely Flutter bridge for a later code spike. |
+| `tflite_flutter` | [pub.dev package](https://pub.dev/packages/tflite_flutter) | Flutter package | TFLite | Yes | Yes | No model included | Apache-2.0 | Package only | Depends on selected model | Medium | Added for local-only isolated spike | Published by `tensorflow.org`, supports Android execution without cloud inference. Model files remain uncommitted. |
 | `fast_style_transfer_flutter` | [pub.dev package](https://pub.dev/packages/fast_style_transfer_flutter) | Flutter package | TFLite | Yes | Claimed | No model included | MIT | Package only | Unknown | High | Reject as dependency | Low adoption and unverified uploader. May be useful as a read-only reference, but not as a dependency. |
 | Hugging Face `leonelhs/arbitrary-image-stylization-v1` | [Model card](https://huggingface.co/leonelhs/arbitrary-image-stylization-v1) | Hugging Face | TF-Keras | Yes after download | No direct mobile artifact | Keras model available | MIT listed | Unknown | Potentially good | High | Research later | Not immediately TFLite-ready for Mixelith. Would require conversion and validation. |
 | Hugging Face style-transfer listings and Spaces | [Style-transfer model listing](https://huggingface.co/models?other=style-transfer) | Hugging Face | Mostly PyTorch, Spaces, or unknown | Unknown | No | Usually no mobile-ready TFLite artifact | Varies or unclear | Often unknown or large | Varies | High | Reject for now | Most findings are not immediately offline Android-ready. |
@@ -49,7 +49,7 @@ Reasons:
 
 ## Why Integration Did Not Proceed Yet
 
-This spike did **not** add `tflite_flutter`, did **not** commit model binaries, and did **not** expose an experimental filter.
+The first research spike did **not** add `tflite_flutter`, did **not** commit model binaries, and did **not** expose an experimental filter.
 
 Reason: the official sample code license is clear, but this spike did not find an independently clear license page for the model binary files themselves that is suitable for committing them to this repository. The model source URLs and sizes are documented, but the binary license must be confirmed before adding model files.
 
@@ -78,14 +78,63 @@ Reason: the sample code license and model hosting are official, but the exact bi
 
 No model file, style reference asset, ML dependency, inference code, or experimental ML filter was added.
 
+## Phase 1J-B Local-Only Spike
+
+Phase 1J-B adds a license-safe local testing path without committing model binaries.
+
+What changed:
+
+- `tflite_flutter` was added as an isolated dependency for a local developer spike.
+- Model binaries are ignored by Git under `assets/models/style_transfer/`.
+- `scripts/download_style_transfer_models.ps1` can download the official int8 model pair locally.
+- The app does not download models at runtime.
+- The app still builds and runs when model files are missing.
+- Project-owned abstract style references were generated under `assets/style_references/`.
+- ML runtime code is isolated under `lib/filters/ml/`.
+- No UI imports TensorFlow Lite.
+- No experimental ML filters are exposed in the normal UI until local inference is verified.
+
+Local model assets:
+
+```text
+assets/models/style_transfer/style_prediction_int8.tflite
+assets/models/style_transfer/style_transfer_int8.tflite
+```
+
+These files must remain untracked. They are suitable only for local evaluation until binary redistribution and app-use terms are confirmed.
+
+Style reference assets:
+
+```text
+assets/style_references/neon_heat_style.png
+assets/style_references/watercolor_wash_style.png
+assets/style_references/mosaic_tiles_style.png
+assets/style_references/oil_night_style.png
+```
+
+These are project-generated abstract images and do not use third-party artwork or public artist labels.
+
+Inference status:
+
+- Minimal two-model pipeline code exists in `MlStyleTransferEngine`.
+- If models are missing, it returns a controlled unavailable result.
+- If models are present on Android, the engine attempts style prediction, style transfer, and cache output.
+- This has not yet been validated with local model files on a device in this repository state.
+- Experimental ML filters are not exposed in UI.
+
+Export status:
+
+- Existing procedural export remains unchanged.
+- ML export is not productized.
+- If a local caller receives a cached ML output, it is only a preview-spike artifact unless export behavior is separately validated.
+
 Next safe steps:
 
 1. Obtain an authoritative license statement for the exact TFLite model binaries, or explicit approval from the rights holder/source.
 2. If acceptable, download the int8 prediction and transfer models into `assets/models/style_transfer/`.
-3. Add `tflite_flutter` behind `lib/filters/ml/`.
-4. Generate project-owned abstract style references, with ownership documented.
-5. Build a minimal tensor-inspection and inference runner.
-6. Keep the feature experimental until Android performance and output quality are validated.
+3. Run the local download script and validate inference on Android.
+4. Inspect tensor summaries if inference fails.
+5. Keep the feature experimental until Android performance and output quality are validated.
 
 ## Proposed Architecture If Approved
 
@@ -128,6 +177,6 @@ Rules:
 
 ## Current Decision
 
-Do not integrate yet. The recommended next action is to obtain a clean license source or explicit written approval for the exact official TensorFlow Lite model files, then run a code spike with `tflite_flutter` and the int8 model pair.
+Do not ship bundled model files yet. The recommended next action is to run the local-only spike with ignored model files, inspect quality/performance on Android, and separately obtain a clean license source or explicit written approval before any public model bundling.
 
 See `docs/THIRD_PARTY_LICENSES.md` for the license gate ledger.

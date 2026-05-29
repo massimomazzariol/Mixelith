@@ -12,6 +12,47 @@ This document records the current state of the **Mixelith** project.
 - Windows: Development preview.
 - Core Principles: No backend, no login, no ads, no analytics, no Firebase, no machine learning in 0.1.0, no share sheet in 0.1.0, no `android.permission.INTERNET` permission.
 
+## [2026-05-29] - Phase 1J-B: Local Style Transfer Experiment
+
+### Completed Activities
+
+- Added `tflite_flutter` for a local-only isolated style transfer spike.
+- Kept official TensorFlow Lite model binaries out of Git.
+- Added ignore rules for local `.tflite`, `.lite`, `.onnx`, and local model/reference folders.
+- Added `scripts/download_style_transfer_models.ps1` for local model download.
+- Added tracked `.gitkeep` placeholders for the model/reference asset directories.
+- Added project-generated abstract style references:
+  - `neon_heat_style.png`;
+  - `watercolor_wash_style.png`;
+  - `mosaic_tiles_style.png`;
+  - `oil_night_style.png`.
+- Added `lib/filters/ml/` with model paths, style reference registry, result model, and a deferred TensorFlow Lite engine.
+- The ML engine returns a controlled unavailable result when model files are missing.
+- No ML filter is exposed in the normal UI.
+- Procedural filters remain unchanged.
+
+### Decision
+
+This is a local spike only. Public release with bundled model files remains blocked until the exact model binary redistribution and app-use terms are confirmed.
+
+### Risks and Pending Tasks
+
+- Local Android inference has not been validated until the ignored model files are downloaded and tested.
+- Windows preview does not initialize TensorFlow Lite and remains a procedural-filter preview target.
+- If inference works locally, output quality and processing time must be evaluated before any product decision.
+
+### Verification Results
+
+- `flutter pub get`: Passed.
+- `flutter analyze`: Passed.
+- `flutter test`: Passed, 43 tests.
+- `flutter build windows`: Passed.
+- `flutter build apk --debug`: Passed.
+- `flutter build apk --release`: Passed.
+- Debug and release merged manifests inspected: `CAMERA` present; `INTERNET`, `RECORD_AUDIO`, location, and `WRITE_EXTERNAL_STORAGE` absent.
+- Artifact/model audit: No build artifacts, APKs, desktop binaries, or model binaries tracked.
+- Public hygiene grep requested: Zero occurrences.
+
 ## [2026-05-29] - Phase 1J-A: Style Transfer License Gate
 
 ### Completed Activities

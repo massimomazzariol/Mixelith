@@ -35,6 +35,7 @@ lib/
 |-- filters/
 |   |-- domain/
 |   |-- engines/
+|   |-- ml/
 |   |-- presets/
 |   `-- registry/
 |-- media/
@@ -85,6 +86,7 @@ Autonomous filter system.
 
 - Domain: Preset, parameters, result, engine type.
 - Engines: `CpuFilterEngine`, future color matrix engine, other future engines.
+- ML: Local-only TensorFlow Lite spike under `filters/ml/`, isolated from UI and disabled when local model files are missing.
 - Registry: `DefaultFilterRegistry` for initial presets.
 - The filtered preview is written to the local cache and does not modify the original preview.
 
@@ -283,6 +285,25 @@ photo_manager AssetEntity
   -> GalExportRepository on Android
   -> Android gallery
 ```
+
+## Local ML Spike Pipeline
+
+```text
+ignored local TFLite model files
+  -> MlStyleTransferEngine under filters/ml/
+  -> project-generated style reference
+  -> content preview image
+  -> local TensorFlow Lite inference on Android if models are present
+  -> cache output for spike validation
+```
+
+Rules:
+
+- Model files under `assets/models/style_transfer/` are ignored by Git.
+- The app never downloads models at runtime.
+- UI code must not import TensorFlow Lite.
+- Windows preview must continue to work without native TensorFlow Lite runtime setup.
+- Procedural filters remain the product fallback.
 
 ## Camera Pipeline 0.1.0
 
