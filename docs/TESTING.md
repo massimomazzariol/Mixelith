@@ -201,6 +201,21 @@ The current export pipeline decodes image pixels and re-encodes JPEG/PNG output 
 
 The earlier emulator check only confirmed that an exported JPEG did not contain an `Exif` marker. That is a useful smoke check, not a full metadata audit.
 
+## Future On-Device Style Transfer Validation
+
+If an offline style transfer spike is approved later, validate it before any product exposure:
+
+- Confirm source and redistribution terms for every model binary.
+- Confirm every model is bundled as an asset, not downloaded at runtime.
+- Confirm `android.permission.INTERNET` remains absent.
+- Confirm Windows preview either works or fails gracefully without breaking the app.
+- Run tensor-shape inspection before attempting full inference.
+- Run a small-image inference test.
+- Test output quality on several real Android photos.
+- Measure processing time and memory on a mid-range Android device.
+- Verify export still re-encodes output without copying original metadata.
+- Keep procedural filters available as fallback.
+
 ## V0.1.0 Checklist
 
 0.1.0 stable requires validation beyond the current technical MVP.

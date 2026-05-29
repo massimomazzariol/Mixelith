@@ -135,6 +135,24 @@ Thumbnails must reflect the current preset, not generic icons.
 
 The 0.1.0 filters are procedural and local. They do not claim equivalence to style transfer, generative models, or perfect artistic replication.
 
+## On-Device Style Transfer Research
+
+The procedural filters remain the active product implementation. A separate research spike evaluated offline TensorFlow Lite style transfer because the current procedural effects may not be visually strong enough.
+
+Current decision:
+
+- Primary future target: official TensorFlow Lite arbitrary image stylization, int8 model pair.
+- No model binary has been committed.
+- No TensorFlow Lite dependency has been added.
+- No ML filter is exposed in the app.
+- Any future ML engine must live under `lib/filters/ml/` or an equivalent isolated adapter layer.
+- UI code must not import ML runtimes.
+- Existing procedural presets must remain available as fallback.
+- No runtime downloads are allowed.
+- No public filter label may use artist names.
+
+See `docs/ML_STYLE_TRANSFER_RESEARCH.md` for the candidate matrix.
+
 ## 0.1.0 Calibration
 
 The current filters are a technical base but must be calibrated on real photos for 0.1.0:

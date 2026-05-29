@@ -215,6 +215,7 @@ Deliverables:
 
 ## Future
 
+- On-device artistic style transfer after license approval, model bundling validation, Android performance testing, and explicit product-scope approval.
 - Advanced batch processing.
 - Stack reordering.
 - Removal of individual filters from the stack.

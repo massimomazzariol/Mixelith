@@ -45,6 +45,21 @@ Camera capture decision:
 - Video capture and audio remain out of scope.
 - `CameraController` must use `enableAudio: false`.
 
+## Proposed Dependency: `tflite_flutter`
+
+Status: **researched, not added**.
+
+- Purpose: Potential offline TensorFlow Lite inference for artistic style transfer.
+- Proposed phase: Future isolated ML style transfer spike.
+- Publisher: `tensorflow.org` on pub.dev.
+- License: Apache-2.0 for the package.
+- Why considered: It is the likely Flutter bridge for bundled TFLite models and supports Android execution without cloud inference.
+- Required Adapter: Yes, under `lib/filters/ml/`.
+- UI rule: No UI file may import `tflite_flutter`.
+- Runtime rule: No model downloads at runtime and no `android.permission.INTERNET`.
+- Current blocker: The exact model binary redistribution/license terms for the selected TFLite files must be confirmed before committing model assets.
+- Decision: Do not add the dependency until model files are approved and an isolated code spike is authorized.
+
 ## Excluded or Postponed Dependencies
 
 | Package | Decision | Reason |
@@ -80,6 +95,15 @@ Camera capture decision:
 - `android.permission.RECORD_AUDIO` must remain absent in the merged manifests.
 - `camera_android_camerax` also declares `RECORD_AUDIO` and `WRITE_EXTERNAL_STORAGE` transitively; the app manifest explicitly removes them using `tools:node="remove"`.
 - `android.permission.INTERNET` must remain absent.
+
+## Style Transfer Research Spike
+
+- Evaluated official TensorFlow Lite artistic style transfer, TensorFlow Hub/Kaggle handles, TensorFlow examples, selected Flutter/GitHub wrappers, Hugging Face candidates, ONNX Model Zoo, and MicroAST.
+- Primary target selected for a future code spike: official TensorFlow Lite arbitrary image stylization int8 model pair.
+- No dependency was added.
+- No model file was committed.
+- No product filter was exposed.
+- See `docs/ML_STYLE_TRANSFER_RESEARCH.md`.
 
 ## Operational Rule
 

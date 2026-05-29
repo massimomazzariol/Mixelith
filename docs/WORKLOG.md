@@ -12,6 +12,35 @@ This document records the current state of the **Mixelith** project.
 - Windows: Development preview.
 - Core Principles: No backend, no login, no ads, no analytics, no Firebase, no machine learning in 0.1.0, no share sheet in 0.1.0, no `android.permission.INTERNET` permission.
 
+## [2026-05-29] - Research Spike: Offline Style Transfer Models
+
+### Completed Activities
+
+- Researched offline artistic style transfer options for stronger Mixelith filters.
+- Evaluated official TensorFlow Lite style transfer documentation, TensorFlow blog material, TensorFlow examples, TensorFlow Hub/Kaggle handles, selected Flutter/GitHub wrappers, Hugging Face candidates, ONNX Model Zoo, and MicroAST.
+- Created `docs/ML_STYLE_TRANSFER_RESEARCH.md` with a candidate matrix.
+- Selected official TensorFlow Lite arbitrary image stylization int8 as the primary future spike target.
+- Documented measured model sizes by HTTP HEAD:
+  - int8 prediction model: 2,828,838 bytes;
+  - int8 transfer model: 284,398 bytes;
+  - fp16 prediction model: 4,708,350 bytes;
+  - fp16 transfer model: 422,086 bytes.
+- Documented `tflite_flutter` as a proposed dependency, but did not add it.
+- Did not commit model binaries.
+- Did not expose any experimental filter in the UI.
+
+### Decision
+
+Do not integrate yet. The next safe step is to confirm redistribution terms for the exact official TensorFlow Lite model binaries, then authorize a separate isolated code spike.
+
+### Risks and Pending Tasks
+
+- Model binary license and redistribution terms must be confirmed before committing assets.
+- Style reference images or precomputed style embeddings also need source/license review.
+- Android performance and memory must be tested on a real mid-range device.
+- Windows preview may require a graceful fallback if native TensorFlow Lite libraries are unavailable.
+- Procedural filters must remain available as fallback.
+
 ## [2026-05-28] - Phase 1I Completed: Real Camera Capture
 
 ### Completed Activities

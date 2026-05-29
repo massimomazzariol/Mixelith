@@ -35,6 +35,9 @@ Current Phase: **Phase 1J: multi-photo selection**.
 
 ## Should
 
+- Confirm redistribution terms for the official TensorFlow Lite style transfer model files before committing any model binary.
+- Run an isolated `tflite_flutter` code spike with the int8 TensorFlow Lite style transfer model pair after model approval.
+- Evaluate whether on-device style transfer changes the 0.1.0 scope or remains a later track.
 - Evaluate native Android Photo Picker for true limited/single-photo access.
 - Validate metadata scrub with dedicated EXIF tool on exported JPEG and PNG.
 - Test filter/export performance on a mid-range Android device with large photos.
@@ -44,6 +47,7 @@ Current Phase: **Phase 1J: multi-photo selection**.
 
 ## Later
 
+- On-device style transfer filters if the TensorFlow Lite spike proves acceptable in quality, size, performance, and licensing.
 - Advanced batch processing with complex presets.
 - Reordering of the filter stack.
 - Removal of a single filter from the stack.
