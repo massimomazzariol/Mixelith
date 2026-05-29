@@ -136,6 +136,49 @@ Next safe steps:
 4. Inspect tensor summaries if inference fails.
 5. Keep the feature experimental until Android performance and output quality are validated.
 
+## Phase 1J-C Local Validation
+
+Phase 1J-C validated the ignored local model workflow on an Android emulator without committing model binaries.
+
+Local model download:
+
+- `scripts/download_style_transfer_models.ps1` downloaded the official int8 model pair into `assets/models/style_transfer/`.
+- `style_prediction_int8.tflite` was present locally at 2,828,838 bytes.
+- `style_transfer_int8.tflite` was present locally at 284,398 bytes.
+- Both `.tflite` files remained ignored by Git and were not committed.
+
+Tensor inspection:
+
+| Model | Tensor | Type | Shape | Bytes |
+| :--- | :--- | :--- | :--- | ---: |
+| Prediction input | `style_image` | `float32` | `[1, 256, 256, 3]` | 786,432 |
+| Prediction output | `mobilenet_conv/Conv/BiasAdd` | `float32` | `[1, 1, 1, 100]` | 400 |
+| Transfer input | `content_image` | `float32` | `[1, 384, 384, 3]` | 1,769,472 |
+| Transfer input | `mobilenet_conv/Conv/BiasAdd` | `float32` | `[1, 1, 1, 100]` | 400 |
+| Transfer output | `transformer/expand/conv3/conv/Sigmoid` | `float32` | `[1, 384, 384, 3]` | 1,769,472 |
+
+Validation result:
+
+- Inference ran through the isolated `MlStyleTransferEngine` on `emulator-5554`.
+- The validation app generated a local test content image, ran style prediction with the project-owned `neon_heat_style.png` reference, ran style transfer, and wrote a cached JPEG output.
+- Output was created at 384x384 and decoded successfully.
+- The output differed from the input with mean absolute RGB difference `56.527`.
+- Debug emulator processing time reported by the app was approximately `11.47s`.
+- The `flutter run` wrapper timed out while attaching to the debug service, but Android logcat contained the successful validation output. Treat this as a local spike result, not a product benchmark.
+
+Quality observation:
+
+- The output is visibly stylized, so the model path is technically viable.
+- The first `neon_heat_style.png` result was painterly and strongly transformed, but muddy/green rather than the desired warm neon/pop direction.
+- Style reference design and possible embedding calibration are required before exposing any ML look to users.
+
+Decision:
+
+- Keep experimental ML filters hidden.
+- Do not expose ML filters as product-ready.
+- Do not implement ML export yet.
+- Continue only as a tuning/research track unless licensing, quality, and performance improve.
+
 ## Proposed Architecture If Approved
 
 ```text
@@ -177,6 +220,6 @@ Rules:
 
 ## Current Decision
 
-Do not ship bundled model files yet. The recommended next action is to run the local-only spike with ignored model files, inspect quality/performance on Android, and separately obtain a clean license source or explicit written approval before any public model bundling.
+Do not ship bundled model files yet. The local-only spike proves that the int8 model pair can run on Android through the isolated engine, but the first style reference output needs visual tuning and the binary redistribution license remains unresolved. The recommended next action is to tune project-owned style references and test real photos locally while separately obtaining a clean license source or explicit written approval before any public model bundling.
 
 See `docs/THIRD_PARTY_LICENSES.md` for the license gate ledger.

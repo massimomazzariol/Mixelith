@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:tflite_flutter/tflite_flutter.dart' deferred as tfl
+import 'package:tflite_flutter/tflite_flutter.dart'
+    deferred as tfl
     hide ListShape;
 
 import '../../storage/domain/cache_service.dart';
+import 'ml_style_transfer_model_info.dart';
 import 'ml_style_transfer_model_paths.dart';
 import 'ml_style_transfer_result.dart';
 import 'style_reference_registry.dart';
@@ -77,18 +79,16 @@ class MlStyleTransferEngine {
       predictionInterpreter = tfl.Interpreter.fromBuffer(predictionBytes);
       transferInterpreter = tfl.Interpreter.fromBuffer(transferBytes);
 
+      final modelInfo = _modelInfoFromInterpreters(
+        predictionInterpreter: predictionInterpreter,
+        transferInterpreter: transferInterpreter,
+      );
+      final tensorSummary = modelInfo.summary;
       final predictionInputs = predictionInterpreter.getInputTensors() as List;
       final predictionOutputs =
           predictionInterpreter.getOutputTensors() as List;
       final transferInputs = transferInterpreter.getInputTensors() as List;
       final transferOutputs = transferInterpreter.getOutputTensors() as List;
-
-      final tensorSummary = _summarizeTensors(
-        predictionInputs: predictionInputs,
-        predictionOutputs: predictionOutputs,
-        transferInputs: transferInputs,
-        transferOutputs: transferOutputs,
-      );
 
       if (predictionInputs.length != 1 || predictionOutputs.length != 1) {
         return MlStyleTransferResult.unsupported(
@@ -152,7 +152,9 @@ class MlStyleTransferEngine {
         tensorBytes: Uint8List.fromList(outputTensor.data),
         tensor: outputTensor,
       );
-      final encoded = Uint8List.fromList(img.encodeJpg(outputImage, quality: 90));
+      final encoded = Uint8List.fromList(
+        img.encodeJpg(outputImage, quality: 90),
+      );
       final outputPath = await _cacheService.writeTempFile(encoded, 'jpg');
 
       return MlStyleTransferResult.success(
@@ -165,6 +167,34 @@ class MlStyleTransferEngine {
     } catch (error) {
       return MlStyleTransferResult.error(
         'Unable to run local style transfer: $error',
+      );
+    } finally {
+      predictionInterpreter?.close();
+      transferInterpreter?.close();
+    }
+  }
+
+  Future<MlStyleTransferModelInfo?> inspectModels() async {
+    if (!await areModelsAvailable() || !_canRunOnCurrentPlatform) {
+      return null;
+    }
+
+    dynamic predictionInterpreter;
+    dynamic transferInterpreter;
+
+    try {
+      await tfl.loadLibrary();
+
+      predictionInterpreter = tfl.Interpreter.fromBuffer(
+        await _readAssetBytes(MlStyleTransferModelPaths.predictionAsset),
+      );
+      transferInterpreter = tfl.Interpreter.fromBuffer(
+        await _readAssetBytes(MlStyleTransferModelPaths.transferAsset),
+      );
+
+      return _modelInfoFromInterpreters(
+        predictionInterpreter: predictionInterpreter,
+        transferInterpreter: transferInterpreter,
       );
     } finally {
       predictionInterpreter?.close();
@@ -186,27 +216,36 @@ class MlStyleTransferEngine {
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
-  String _summarizeTensors({
-    required List predictionInputs,
-    required List predictionOutputs,
-    required List transferInputs,
-    required List transferOutputs,
+  MlStyleTransferModelInfo _modelInfoFromInterpreters({
+    required dynamic predictionInterpreter,
+    required dynamic transferInterpreter,
   }) {
-    return [
-      'prediction inputs: ${_tensorListSummary(predictionInputs)}',
-      'prediction outputs: ${_tensorListSummary(predictionOutputs)}',
-      'transfer inputs: ${_tensorListSummary(transferInputs)}',
-      'transfer outputs: ${_tensorListSummary(transferOutputs)}',
-    ].join('; ');
+    return MlStyleTransferModelInfo(
+      predictionInputs: _tensorInfos(
+        predictionInterpreter.getInputTensors() as List,
+      ),
+      predictionOutputs: _tensorInfos(
+        predictionInterpreter.getOutputTensors() as List,
+      ),
+      transferInputs: _tensorInfos(
+        transferInterpreter.getInputTensors() as List,
+      ),
+      transferOutputs: _tensorInfos(
+        transferInterpreter.getOutputTensors() as List,
+      ),
+    );
   }
 
-  String _tensorListSummary(List tensors) {
-    return tensors
-        .map(
-          (tensor) =>
-              '${tensor.name} ${tensor.type} shape=${tensor.shape} bytes=${tensor.numBytes()}',
-        )
-        .join(', ');
+  List<MlTensorInfo> _tensorInfos(List tensors) {
+    return [
+      for (final tensor in tensors)
+        MlTensorInfo(
+          name: tensor.name as String,
+          type: tensor.type.toString(),
+          shape: List<int>.from(tensor.shape as List),
+          byteSize: tensor.numBytes() as int,
+        ),
+    ];
   }
 
   int _findImageTensorIndex(List tensors) {

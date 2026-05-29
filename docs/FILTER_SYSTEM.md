@@ -147,6 +147,7 @@ Current decision:
 - `tflite_flutter` has been added only for an isolated local spike.
 - No ML filter is exposed in the app.
 - The local ML engine returns a controlled unavailable result when model files are missing.
+- Phase 1J-C validated the isolated engine locally on Android with ignored model files; output was generated successfully but needs style-reference tuning before product exposure.
 - Any future ML engine must live under `lib/filters/ml/` or an equivalent isolated adapter layer.
 - UI code must not import ML runtimes.
 - Existing procedural presets must remain available as fallback.

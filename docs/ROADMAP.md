@@ -18,6 +18,7 @@ Phase 1H 0.1.0 scope realignment                           Completed
 Phase 1I Camera capture                                    Completed
 Phase 1J-A ML style transfer license gate                  Blocked
 Phase 1J-B Local style transfer experiment                 Experimental
+Phase 1J-C Local style transfer validation                 Experimental
 Phase 1J Multi-photo selection                             Next
 Phase 1K Filter stack and clear all                        Planned
 Phase 1L Filter calibration and thumbnails                  Planned
@@ -183,6 +184,24 @@ Deliverables:
 Product rule:
 
 - Public release with bundled models remains blocked until redistribution and app-use terms are confirmed.
+
+## Phase 1J-C: Local Style Transfer Validation
+
+Objective: Validate whether the ignored local TensorFlow Lite style transfer model pair can actually run and produce output on Android.
+
+Status: Experimental.
+
+Findings:
+
+- Local model download succeeded and the `.tflite` files stayed ignored by Git.
+- Tensor inspection matched the expected prediction-plus-transfer model pipeline.
+- Android emulator validation produced a cached 384x384 style transfer output.
+- The output differed significantly from the input, but the first style reference was not visually aligned with Mixelith's desired warm neon/pop direction.
+- Experimental ML filters remain hidden.
+
+Product rule:
+
+- Continue only as research/tuning until licensing, quality, and performance are all acceptable.
 
 ## Phase 1K: Filter Stack and Clear All
 

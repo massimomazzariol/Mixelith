@@ -12,14 +12,8 @@ void main() {
   test('model binary patterns are ignored by Git', () {
     final gitignore = File('.gitignore').readAsStringSync();
 
-    expect(
-      gitignore,
-      contains('/assets/models/style_transfer/*.tflite'),
-    );
-    expect(
-      gitignore,
-      contains('/assets/models/style_transfer/*.onnx'),
-    );
+    expect(gitignore, contains('/assets/models/style_transfer/*.tflite'));
+    expect(gitignore, contains('/assets/models/style_transfer/*.onnx'));
     expect(gitignore, contains('/.local/models/'));
   });
 
@@ -76,7 +70,9 @@ void main() {
         .listSync(recursive: true)
         .whereType<File>()
         .where((file) => file.path.endsWith('.dart'))
-        .where((file) => !file.path.replaceAll('\\', '/').contains('/filters/ml/'));
+        .where(
+          (file) => !file.path.replaceAll('\\', '/').contains('/filters/ml/'),
+        );
 
     for (final file in files) {
       final content = file.readAsStringSync();

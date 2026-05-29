@@ -44,3 +44,12 @@ Local developer evaluation is allowed without public model redistribution:
 - The app must not download models at runtime.
 - Public release with bundled model files remains blocked until redistribution and app-use terms are confirmed.
 - Project-generated abstract style references are allowed because they are created by this repository and do not contain third-party artwork.
+
+## Phase 1J-C Validation Note
+
+The ignored local model files were downloaded and used for Android validation, but they were not committed:
+
+- `assets/models/style_transfer/style_prediction_int8.tflite`, 2,828,838 bytes, ignored by Git.
+- `assets/models/style_transfer/style_transfer_int8.tflite`, 284,398 bytes, ignored by Git.
+
+This validation does not change the license decision. Public repository redistribution remains unknown, so the model files must stay untracked and cannot be bundled for release until an authoritative license statement or explicit approval is obtained.

@@ -105,6 +105,7 @@ Status: **approved for a local isolated spike and added**.
 - Primary target selected for a future code spike: official TensorFlow Lite arbitrary image stylization int8 model pair.
 - Phase 1J-A re-checked the license gate and kept it blocked because the model binary license and redistribution terms were not explicit enough.
 - Phase 1J-B added `tflite_flutter` for a local-only spike.
+- Phase 1J-C validated local Android inference with ignored model files; the dependency remains isolated and experimental.
 - No model file was committed.
 - No product filter was exposed.
 - See `docs/ML_STYLE_TRANSFER_RESEARCH.md` and `docs/THIRD_PARTY_LICENSES.md`.

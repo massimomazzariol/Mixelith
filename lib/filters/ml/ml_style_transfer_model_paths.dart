@@ -3,8 +3,7 @@ class MlStyleTransferModelPaths {
 
   static const directory = 'assets/models/style_transfer';
 
-  static const predictionAsset =
-      '$directory/style_prediction_int8.tflite';
+  static const predictionAsset = '$directory/style_prediction_int8.tflite';
   static const transferAsset = '$directory/style_transfer_int8.tflite';
 
   static const predictionSourceUrl =
@@ -15,8 +14,5 @@ class MlStyleTransferModelPaths {
   static const predictionExpectedBytes = 2828838;
   static const transferExpectedBytes = 284398;
 
-  static const allModelAssets = [
-    predictionAsset,
-    transferAsset,
-  ];
+  static const allModelAssets = [predictionAsset, transferAsset];
 }

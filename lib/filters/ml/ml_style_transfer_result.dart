@@ -1,9 +1,4 @@
-enum MlStyleTransferStatus {
-  success,
-  unavailable,
-  unsupported,
-  error,
-}
+enum MlStyleTransferStatus { success, unavailable, unsupported, error }
 
 class MlStyleTransferResult {
   const MlStyleTransferResult({

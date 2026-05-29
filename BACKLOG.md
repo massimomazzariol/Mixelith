@@ -1,6 +1,6 @@
 # Backlog
 
-Current Phase: **Phase 1J-B: local ML style transfer spike**.
+Current Phase: **Phase 1J-C: local ML style transfer validation**.
 
 ## Must For 0.1.0
 
@@ -37,7 +37,8 @@ Current Phase: **Phase 1J-B: local ML style transfer spike**.
 
 - Confirm redistribution terms for the official TensorFlow Lite style transfer model files before committing any model binary. Phase 1J-A rechecked this and the gate remains blocked.
 - Run local-only style transfer testing with ignored model files using `scripts/download_style_transfer_models.ps1`.
-- Validate the isolated `tflite_flutter` spike on Android after local models are downloaded.
+- Validate the isolated `tflite_flutter` spike on additional real Android photos after the first local emulator validation.
+- Tune project-owned style references before exposing any ML filter.
 - Evaluate whether on-device style transfer changes the 0.1.0 scope or remains a later track.
 - Evaluate native Android Photo Picker for true limited/single-photo access.
 - Validate metadata scrub with dedicated EXIF tool on exported JPEG and PNG.
@@ -49,6 +50,7 @@ Current Phase: **Phase 1J-B: local ML style transfer spike**.
 ## Later
 
 - On-device style transfer filters if the TensorFlow Lite spike proves acceptable in quality, size, performance, and licensing.
+- Product ML exposure remains blocked until model redistribution is resolved and visual quality is approved.
 - Advanced batch processing with complex presets.
 - Reordering of the filter stack.
 - Removal of a single filter from the stack.

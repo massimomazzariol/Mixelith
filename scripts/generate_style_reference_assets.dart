@@ -7,22 +7,13 @@ void main() {
   final outputDirectory = Directory('assets/style_references');
   outputDirectory.createSync(recursive: true);
 
-  _writePng(
-    '${outputDirectory.path}/neon_heat_style.png',
-    _neonHeat(),
-  );
+  _writePng('${outputDirectory.path}/neon_heat_style.png', _neonHeat());
   _writePng(
     '${outputDirectory.path}/watercolor_wash_style.png',
     _watercolorWash(),
   );
-  _writePng(
-    '${outputDirectory.path}/mosaic_tiles_style.png',
-    _mosaicTiles(),
-  );
-  _writePng(
-    '${outputDirectory.path}/oil_night_style.png',
-    _oilNight(),
-  );
+  _writePng('${outputDirectory.path}/mosaic_tiles_style.png', _mosaicTiles());
+  _writePng('${outputDirectory.path}/oil_night_style.png', _oilNight());
 }
 
 void _writePng(String path, img.Image image) {

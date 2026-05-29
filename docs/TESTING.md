@@ -219,7 +219,7 @@ If an offline style transfer spike is approved later, validate it before any pro
 - Verify export still re-encodes output without copying original metadata.
 - Keep procedural filters available as fallback.
 
-Phase 1J-A result: the official TensorFlow Lite arbitrary image stylization int8 model pair remains technically promising, but its binary redistribution terms were not confirmed. No model, dependency, or experimental filter should be tested until that gate passes.
+Phase 1J-A result: the official TensorFlow Lite arbitrary image stylization int8 model pair remains technically promising, but its binary redistribution terms were not confirmed. Public model bundling remains blocked. Local-only testing is allowed only with ignored model files that are never committed.
 
 ## Local ML Style Transfer Spike
 
@@ -228,7 +228,7 @@ Phase 1J-B allows local developer testing without committing model binaries.
 ```powershell
 .\scripts\download_style_transfer_models.ps1
 flutter pub get
-flutter run -d <android-device-id>
+flutter run -d <android-device-id> -t tool/ml_style_transfer_validation_app.dart --dart-define=MIXELITH_RUN_LOCAL_ML_VALIDATION=true
 ```
 
 Checklist:
@@ -241,10 +241,26 @@ Checklist:
 - Run the local ML engine through the isolated spike path.
 - If inference succeeds, inspect output quality and processing time.
 - If inference fails, record tensor summary and error message.
+- If the debug run wrapper times out, inspect logcat for `MIXELITH_ML_VALIDATION` lines before treating the run as failed.
 - Do not commit downloaded model files.
 - Keep `android.permission.INTERNET` absent.
 
 Normal repository checks must pass without downloaded model files.
+
+Phase 1J-C validation result:
+
+- Local model download succeeded.
+- Tensor inspection matched the expected two-model pipeline:
+  - prediction input `[1, 256, 256, 3]`;
+  - prediction output `[1, 1, 1, 100]`;
+  - transfer content input `[1, 384, 384, 3]`;
+  - transfer style input `[1, 1, 1, 100]`;
+  - transfer output `[1, 384, 384, 3]`.
+- Android emulator validation produced a 384x384 cached JPEG output.
+- Mean absolute RGB difference from the generated input was `56.527`.
+- Debug emulator processing time was approximately `11.47s`.
+- Output was visually transformed but not yet aligned with the desired warm neon/pop direction.
+- Experimental ML filters remain hidden.
 
 ## V0.1.0 Checklist
 

@@ -3,6 +3,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$RepoRoot = Split-Path -Parent $PSScriptRoot
+
+if (-not [System.IO.Path]::IsPathRooted($OutputDirectory)) {
+  $OutputDirectory = Join-Path $RepoRoot $OutputDirectory
+}
 
 $models = @(
   @{

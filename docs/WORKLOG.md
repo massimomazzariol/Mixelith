@@ -12,6 +12,47 @@ This document records the current state of the **Mixelith** project.
 - Windows: Development preview.
 - Core Principles: No backend, no login, no ads, no analytics, no Firebase, no machine learning in 0.1.0, no share sheet in 0.1.0, no `android.permission.INTERNET` permission.
 
+## [2026-05-29] - Phase 1J-C: Local Style Transfer Validation
+
+### Completed Activities
+
+- Downloaded the official TensorFlow Lite int8 style transfer model pair locally with `scripts/download_style_transfer_models.ps1`.
+- Confirmed both `.tflite` files are ignored by Git and not tracked.
+- Added a controlled tensor inspection model and local validation target for the isolated `MlStyleTransferEngine`.
+- Validated the two-model pipeline on Android emulator `emulator-5554` through a development-only validation app.
+- Confirmed style prediction and style transfer inference ran and wrote a cached JPEG output.
+- Kept experimental ML filters hidden from the normal app UI.
+- Kept procedural filters unchanged.
+- Removed unused transitive `ACCESS_NETWORK_STATE` and `READ_PHONE_STATE` permissions from the merged Android manifest.
+
+### Tensor Summary
+
+- Prediction input: `style_image`, `float32`, shape `[1, 256, 256, 3]`, 786,432 bytes.
+- Prediction output: `mobilenet_conv/Conv/BiasAdd`, `float32`, shape `[1, 1, 1, 100]`, 400 bytes.
+- Transfer input: `content_image`, `float32`, shape `[1, 384, 384, 3]`, 1,769,472 bytes.
+- Transfer input: `mobilenet_conv/Conv/BiasAdd`, `float32`, shape `[1, 1, 1, 100]`, 400 bytes.
+- Transfer output: `transformer/expand/conv3/conv/Sigmoid`, `float32`, shape `[1, 384, 384, 3]`, 1,769,472 bytes.
+
+### Validation Result
+
+- Output image created: yes, 384x384 cached JPEG.
+- Output decoded successfully.
+- Mean absolute RGB difference vs. the generated content image: `56.527`.
+- Debug emulator processing time: approximately `11.47s`.
+- The `flutter run` command used for the validation app timed out while attaching to the debug service, but Android logcat contained successful `MIXELITH_ML_VALIDATION` output.
+- Debug and release merged manifests keep `INTERNET`, `RECORD_AUDIO`, location, `WRITE_EXTERNAL_STORAGE`, `ACCESS_NETWORK_STATE`, and `READ_PHONE_STATE` absent. `CAMERA` remains present for still-photo capture.
+
+### Quality Notes
+
+- The model path is technically viable because it produced a strong transformed output.
+- The first `neon_heat_style.png` reference produced a painterly, muddy/green result rather than the desired warm neon/pop look.
+- Style references or precomputed embeddings need tuning before any ML filter is shown to users.
+- ML export remains unproductized.
+
+### Decision
+
+Continue the ML path only as a hidden local spike. Do not expose experimental ML filters, do not commit model binaries, and do not treat the current output as product-ready.
+
 ## [2026-05-29] - Phase 1J-B: Local Style Transfer Experiment
 
 ### Completed Activities
