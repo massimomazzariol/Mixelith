@@ -65,6 +65,29 @@ void main() {
     expect(state.selectionOrderByAssetId, {'picked-a': 1, 'picked-b': 2});
   });
 
+  test(
+    'native picker accepts HEIC file-backed images in the batch queue',
+    () async {
+      final picker = _FakeBatchImagePicker(
+        BatchImagePickResult(
+          items: [
+            _picked('picked-heic', extension: 'heic', mimeType: 'image/heic'),
+          ],
+        ),
+      );
+      final container = _container(imagePicker: picker);
+      addTearDown(container.dispose);
+      final controller = container.read(batchExportControllerProvider.notifier);
+
+      await controller.pickImages();
+
+      final item = container.read(batchExportControllerProvider).queue.single;
+      expect(item.sourcePath, '/cache/picked-heic.heic');
+      expect(item.sourceExtension, 'heic');
+      expect(item.usesLocalFileSource, isTrue);
+    },
+  );
+
   test('native picker cancel leaves queue unchanged', () async {
     final picker = _FakeBatchImagePicker(
       const BatchImagePickResult.cancelled(),
@@ -221,6 +244,35 @@ void main() {
     },
   );
 
+  test('procedural batch defaults HEIC inputs to HEIC export', () async {
+    final importService = _FakeImportService();
+    final exportService = _FakeExportService();
+    final repo = _RecordingExportRepository();
+    final picker = _FakeBatchImagePicker(
+      BatchImagePickResult(
+        items: [
+          _picked('picked-heic', extension: 'heic', mimeType: 'image/heic'),
+        ],
+      ),
+    );
+    final container = _container(
+      importService: importService,
+      exportService: exportService,
+      exportRepository: repo,
+      imagePicker: picker,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(batchExportControllerProvider.notifier);
+
+    await controller.pickImages();
+    controller.selectProceduralStack([_filter(neonHeatFilterId)]);
+    await controller.startBatch();
+
+    expect(importService.fileCalls, ['/cache/picked-heic.heic']);
+    expect(exportService.proceduralFormats.single, ExportFormat.heic);
+    expect(repo.requests.single.format, ExportFormat.heic);
+  });
+
   test('ONNX batch uses selected model and full-photo input', () async {
     final importService = _FakeImportService();
     final exportService = _FakeExportService();
@@ -373,12 +425,19 @@ ProviderContainer _container({
   );
 }
 
-BatchPickedImage _picked(String id, {int width = 40, int height = 30}) {
+BatchPickedImage _picked(
+  String id, {
+  int width = 40,
+  int height = 30,
+  String extension = 'jpg',
+  String? mimeType,
+}) {
   return BatchPickedImage(
     id: id,
-    path: '/cache/$id.jpg',
-    displayName: '$id.jpg',
-    extension: 'jpg',
+    path: '/cache/$id.$extension',
+    displayName: '$id.$extension',
+    extension: extension,
+    mimeType: mimeType,
     width: width,
     height: height,
   );
@@ -525,6 +584,7 @@ class _FakeExportService extends ExportService {
       );
 
   final List<String> proceduralCalls = [];
+  final List<ExportFormat> proceduralFormats = [];
   final List<String> onnxCalls = [];
 
   @override
@@ -534,6 +594,7 @@ class _FakeExportService extends ExportService {
     required ExportSettings settings,
   }) async {
     proceduralCalls.add(workingImage.sourceAssetId);
+    proceduralFormats.add(settings.format);
     return ExportPreparedFile(
       path: 'prepared-${workingImage.sourceAssetId}.${settings.fileExtension}',
       format: settings.format,
@@ -636,6 +697,11 @@ class _NoopCacheService implements CacheService {
   @override
   Future<String> writeTempFile(List<int> bytes, String extension) async {
     return 'temp.$extension';
+  }
+
+  @override
+  Future<String> reserveTempFilePath(String extension) async {
+    return 'reserved.$extension';
   }
 }
 

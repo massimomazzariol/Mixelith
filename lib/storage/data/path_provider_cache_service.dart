@@ -21,15 +21,24 @@ class PathProviderCacheService implements CacheService {
   @override
   Future<String> writeTempFile(List<int> bytes, String extension) async {
     try {
-      final directory = await _ensureCacheDirectory();
-      final normalizedExtension = _normalizeExtension(extension);
-      final filename = _createFilename(normalizedExtension);
-      final file = File(_joinPath(directory.path, filename));
+      final file = File(await reserveTempFilePath(extension));
 
       await file.writeAsBytes(bytes, flush: true);
       return file.path;
     } on FileSystemException catch (error) {
       throw CacheServiceException('Unable to write cache file.', error);
+    }
+  }
+
+  @override
+  Future<String> reserveTempFilePath(String extension) async {
+    try {
+      final directory = await _ensureCacheDirectory();
+      final normalizedExtension = _normalizeExtension(extension);
+      final filename = _createFilename(normalizedExtension);
+      return _joinPath(directory.path, filename);
+    } on FileSystemException catch (error) {
+      throw CacheServiceException('Unable to create cache file path.', error);
     }
   }
 

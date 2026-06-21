@@ -26,6 +26,11 @@ class FakeCacheService implements CacheService {
   }
 
   @override
+  Future<String> reserveTempFilePath(String extension) async {
+    return _nextPath(extension);
+  }
+
+  @override
   Future<void> clearAll() async {}
 
   @override

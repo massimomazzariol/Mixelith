@@ -248,7 +248,8 @@ class PhotoManagerMediaRepository implements MediaRepository {
       'image/jpeg' => 'jpg',
       'image/png' => 'png',
       'image/webp' => 'webp',
-      'image/heic' || 'image/heif' => 'heic',
+      'image/heic' => 'heic',
+      'image/heif' => 'heif',
       _ => null,
     };
   }

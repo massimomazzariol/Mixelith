@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../data/android_image_normalizer.dart';
 import '../../../media/domain/media_asset.dart';
 import '../domain/working_image_import_service.dart';
 import '../domain/working_image_import_state.dart';
+
+final imageNormalizerProvider = Provider<AndroidImageNormalizer>(
+  (ref) => const AndroidImageNormalizer(),
+);
 
 final workingImageImportServiceProvider = Provider<WorkingImageImportService>((
   ref,
@@ -11,6 +16,7 @@ final workingImageImportServiceProvider = Provider<WorkingImageImportService>((
   return WorkingImageImportService(
     mediaRepository: ref.watch(mediaRepositoryProvider),
     cacheService: ref.watch(cacheServiceProvider),
+    imageNormalizer: ref.watch(imageNormalizerProvider),
   );
 });
 

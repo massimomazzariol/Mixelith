@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../features/export/domain/export_prepared_file.dart';
 import '../../../features/export/domain/export_repository.dart';
+import '../../../features/export/domain/export_save_result.dart';
 import '../../../features/export/domain/export_settings.dart';
 import '../../../features/export/providers/export_controller.dart';
 import '../../../features/import/domain/working_image_import_service.dart';
@@ -168,9 +170,7 @@ class BatchExportController extends Notifier<BatchExportState> {
     );
   }
 
-  Future<void> startBatch({
-    ExportSettings settings = const ExportSettings(format: ExportFormat.jpeg),
-  }) async {
+  Future<void> startBatch({ExportSettings? settings}) async {
     if (state.isBusy) {
       return;
     }
@@ -241,11 +241,18 @@ class BatchExportController extends Notifier<BatchExportState> {
 
   Future<BatchQueueItem> _processItem(
     BatchQueueItem item,
-    ExportSettings settings,
+    ExportSettings? settings,
     int index,
   ) async {
     try {
       final workingImage = await _importWorkingImage(item);
+      final effectiveSettings =
+          settings ??
+          ExportSettings(
+            format: defaultExportFormatForSourceFormat(
+              workingImage.effectiveSourceFormat,
+            ),
+          );
       final mode = state.mode;
       if (mode == BatchProcessingMode.procedural) {
         final prepared = await ref
@@ -253,13 +260,9 @@ class BatchExportController extends Notifier<BatchExportState> {
             .prepareExport(
               workingImage: workingImage,
               filterStack: state.filterStack,
-              settings: settings,
+              settings: effectiveSettings,
             );
-        final result = await _exportRepository.saveImage(
-          filePath: prepared.path,
-          fileName: _batchFileName(index),
-          format: prepared.format,
-        );
+        final result = await _savePrepared(prepared, index);
         if (!result.success) {
           return item.copyWith(
             status: BatchQueueItemStatus.failed,
@@ -272,7 +275,8 @@ class BatchExportController extends Notifier<BatchExportState> {
         }
         return item.copyWith(
           status: BatchQueueItemStatus.exported,
-          message: result.batchMessage,
+          message:
+              result.message ?? prepared.fallbackMessage ?? result.batchMessage,
           savedPath: result.savedPath,
           inputWidth: workingImage.originalWidth,
           inputHeight: workingImage.originalHeight,
@@ -321,14 +325,10 @@ class BatchExportController extends Notifier<BatchExportState> {
           .read(exportServiceProvider)
           .prepareOnnxExport(
             onnxOutputPath: onnxResult.outputPath!,
-            settings: settings,
+            settings: effectiveSettings,
             usedPreviewFallback: source.usedPreviewSource,
           );
-      final result = await _exportRepository.saveImage(
-        filePath: prepared.path,
-        fileName: _batchFileName(index),
-        format: prepared.format,
-      );
+      final result = await _savePrepared(prepared, index);
       if (!result.success) {
         return item.copyWith(
           status: BatchQueueItemStatus.failed,
@@ -342,7 +342,8 @@ class BatchExportController extends Notifier<BatchExportState> {
       }
       return item.copyWith(
         status: BatchQueueItemStatus.exported,
-        message: result.batchMessage,
+        message:
+            result.message ?? prepared.fallbackMessage ?? result.batchMessage,
         savedPath: result.savedPath,
         inputWidth: inputWidth,
         inputHeight: inputHeight,
@@ -373,6 +374,46 @@ class BatchExportController extends Notifier<BatchExportState> {
       );
     }
     return _importService.importAsset(item.asset);
+  }
+
+  Future<ExportSaveResult> _savePrepared(
+    ExportPreparedFile prepared,
+    int index,
+  ) async {
+    final fileName = _batchFileName(index);
+    final result = await _exportRepository.saveImage(
+      filePath: prepared.path,
+      fileName: fileName,
+      format: prepared.format,
+    );
+    if (result.success) {
+      if (prepared.fallbackMessage != null &&
+          prepared.format == ExportFormat.jpeg) {
+        return ExportSaveResult.success(
+          savedPath: result.savedPath,
+          message: prepared.fallbackMessage,
+        );
+      }
+      return result;
+    }
+
+    if (!prepared.hasFallback) {
+      return result;
+    }
+
+    final fallbackResult = await _exportRepository.saveImage(
+      filePath: prepared.fallbackPath!,
+      fileName: fileName,
+      format: prepared.fallbackFormat!,
+    );
+    if (!fallbackResult.success) {
+      return result;
+    }
+
+    return ExportSaveResult.success(
+      savedPath: fallbackResult.savedPath,
+      message: prepared.fallbackMessage,
+    );
   }
 
   void _updateItem(int index, BatchQueueItem updated, {int? currentIndex}) {

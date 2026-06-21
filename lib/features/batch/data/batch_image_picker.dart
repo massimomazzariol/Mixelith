@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import '../../../media/domain/image_source_format.dart';
+
 abstract class BatchImagePicker {
   Future<BatchImagePickResult> pickImage();
 
@@ -135,6 +137,7 @@ class BatchPickedImage {
     required this.path,
     required this.displayName,
     required this.extension,
+    this.mimeType,
     required this.width,
     required this.height,
   });
@@ -145,6 +148,7 @@ class BatchPickedImage {
       path: map['path'] as String? ?? '',
       displayName: map['displayName'] as String? ?? 'Picked photo',
       extension: map['extension'] as String? ?? 'jpg',
+      mimeType: map['mimeType'] as String?,
       width: _asInt(map['width']) ?? 0,
       height: _asInt(map['height']) ?? 0,
     );
@@ -154,8 +158,17 @@ class BatchPickedImage {
   final String path;
   final String displayName;
   final String extension;
+  final String? mimeType;
   final int width;
   final int height;
+
+  ImageSourceFormat get sourceFormat {
+    final byMime = imageSourceFormatFromMimeType(mimeType);
+    if (byMime != ImageSourceFormat.unknown) {
+      return byMime;
+    }
+    return imageSourceFormatFromExtension(extension);
+  }
 
   static int? _asInt(Object? value) {
     if (value is int) {

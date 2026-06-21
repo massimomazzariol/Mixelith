@@ -8,6 +8,9 @@ class ExportPreparedFile {
     required this.height,
     required this.wasResized,
     required this.usedPreviewFallback,
+    this.fallbackPath,
+    this.fallbackFormat,
+    this.fallbackMessage,
   });
 
   final String path;
@@ -16,4 +19,9 @@ class ExportPreparedFile {
   final int height;
   final bool wasResized;
   final bool usedPreviewFallback;
+  final String? fallbackPath;
+  final ExportFormat? fallbackFormat;
+  final String? fallbackMessage;
+
+  bool get hasFallback => fallbackPath != null && fallbackFormat != null;
 }

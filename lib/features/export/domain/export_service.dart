@@ -6,16 +6,20 @@ import '../../editor/domain/applied_filter.dart';
 import '../../editor/domain/working_image.dart';
 import 'export_prepared_file.dart';
 import 'export_settings.dart';
+import 'heif_export_encoder.dart';
 
 class ExportService {
   const ExportService({
     required CacheService cacheService,
     required FilterRegistry filterRegistry,
+    HeifExportEncoder? heifExportEncoder,
   }) : _cacheService = cacheService,
-       _filterRegistry = filterRegistry;
+       _filterRegistry = filterRegistry,
+       _heifExportEncoder = heifExportEncoder;
 
   final CacheService _cacheService;
   final FilterRegistry _filterRegistry;
+  final HeifExportEncoder? _heifExportEncoder;
 
   Future<ExportPreparedFile> prepareExport({
     required WorkingImage workingImage,
@@ -58,17 +62,32 @@ class ExportService {
         );
       }
 
+      final processingFormat = settings.format.requiresHeifEncoder
+          ? ExportFormat.jpeg
+          : settings.format;
       final processed = await processFilterImage(
         inputPath: onnxOutputPath,
         preset: originalPreset,
-        format: settings.format,
+        format: processingFormat,
         jpegQuality: settings.jpegQuality,
         maxLongSide: settings.effectiveMaxLongSide,
       );
       final outputPath = await _cacheService.writeTempFile(
         processed.bytes,
-        settings.fileExtension,
+        processingFormat.fileExtension,
       );
+
+      if (settings.format.requiresHeifEncoder) {
+        return _prepareHeifOutput(
+          jpegPath: outputPath,
+          requestedFormat: settings.format,
+          width: processed.width,
+          height: processed.height,
+          wasResized: processed.wasDownscaled,
+          usedPreviewFallback: usedPreviewFallback,
+          quality: settings.jpegQuality,
+        );
+      }
 
       return ExportPreparedFile(
         path: outputPath,
@@ -114,7 +133,9 @@ class ExportService {
         }
 
         final isLastFilter = index == filterStack.length - 1;
-        outputFormat = isLastFilter ? settings.format : ExportFormat.jpeg;
+        outputFormat = isLastFilter && !settings.format.requiresHeifEncoder
+            ? settings.format
+            : ExportFormat.jpeg;
         final processed = await processFilterImage(
           inputPath: inputPath,
           preset: preset,
@@ -126,7 +147,7 @@ class ExportService {
 
         outputPath = await _cacheService.writeTempFile(
           processed.bytes,
-          isLastFilter ? settings.fileExtension : 'jpg',
+          outputFormat.fileExtension,
         );
         inputPath = outputPath;
         outputWidth = processed.width;
@@ -137,6 +158,18 @@ class ExportService {
       if (outputPath == sourcePath) {
         throw const ExportServiceException(
           'Apply at least one filter before exporting.',
+        );
+      }
+
+      if (settings.format.requiresHeifEncoder) {
+        return _prepareHeifOutput(
+          jpegPath: outputPath,
+          requestedFormat: settings.format,
+          width: outputWidth,
+          height: outputHeight,
+          wasResized: wasResized,
+          usedPreviewFallback: usedPreviewFallback,
+          quality: settings.jpegQuality,
         );
       }
 
@@ -151,6 +184,66 @@ class ExportService {
     } catch (error) {
       throw ExportServiceException('Unable to prepare export image.', error);
     }
+  }
+
+  Future<ExportPreparedFile> _prepareHeifOutput({
+    required String jpegPath,
+    required ExportFormat requestedFormat,
+    required int width,
+    required int height,
+    required bool wasResized,
+    required bool usedPreviewFallback,
+    required int quality,
+  }) async {
+    final fallbackMessage = _heifFallbackMessage(requestedFormat);
+    final encoder = _heifExportEncoder;
+    if (encoder == null) {
+      return ExportPreparedFile(
+        path: jpegPath,
+        format: ExportFormat.jpeg,
+        width: width,
+        height: height,
+        wasResized: wasResized,
+        usedPreviewFallback: usedPreviewFallback,
+        fallbackMessage: fallbackMessage,
+      );
+    }
+
+    try {
+      final heifPath = await _cacheService.reserveTempFilePath(
+        requestedFormat.fileExtension,
+      );
+      final encoded = await encoder.encode(
+        inputPath: jpegPath,
+        outputPath: heifPath,
+        quality: quality,
+      );
+      return ExportPreparedFile(
+        path: encoded.path,
+        format: requestedFormat,
+        width: encoded.width,
+        height: encoded.height,
+        wasResized: wasResized,
+        usedPreviewFallback: usedPreviewFallback,
+        fallbackPath: jpegPath,
+        fallbackFormat: ExportFormat.jpeg,
+        fallbackMessage: fallbackMessage,
+      );
+    } catch (_) {
+      return ExportPreparedFile(
+        path: jpegPath,
+        format: ExportFormat.jpeg,
+        width: width,
+        height: height,
+        wasResized: wasResized,
+        usedPreviewFallback: usedPreviewFallback,
+        fallbackMessage: fallbackMessage,
+      );
+    }
+  }
+
+  String _heifFallbackMessage(ExportFormat requestedFormat) {
+    return 'This photo was exported as JPEG because ${requestedFormat.label} export is not available on this device.';
   }
 }
 

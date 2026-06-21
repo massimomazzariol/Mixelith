@@ -47,6 +47,7 @@ flutter {
 }
 
 dependencies {
+    implementation("androidx.heifwriter:heifwriter:1.0.0")
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.26.0")
     testImplementation(kotlin("test"))
 }

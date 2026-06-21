@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixelith/features/batch/data/batch_image_picker.dart';
+import 'package:mixelith/media/domain/image_source_format.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -73,5 +74,36 @@ void main() {
     expect(result.pickerApi, ImagePickerApi.actionOpenDocument);
     expect(result.pickerApi.label, 'ACTION_OPEN_DOCUMENT');
     expect(result.items.single.height, 480);
+  });
+
+  test('pickImages parses HEIC metadata from the native picker', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'pickImages');
+          return {
+            'success': true,
+            'status': 'picked',
+            'pickerApi': 'android_photo_picker',
+            'items': [
+              {
+                'id': 'heic-photo',
+                'path': '/cache/heic-photo.heic',
+                'displayName': 'heic-photo',
+                'extension': 'heic',
+                'mimeType': 'image/heic',
+                'width': 3024,
+                'height': 4032,
+              },
+            ],
+          };
+        });
+
+    final result = await const MethodChannelBatchImagePicker(
+      channel: channel,
+    ).pickImages();
+
+    expect(result.items.single.extension, 'heic');
+    expect(result.items.single.mimeType, 'image/heic');
+    expect(result.items.single.sourceFormat, ImageSourceFormat.heic);
   });
 }

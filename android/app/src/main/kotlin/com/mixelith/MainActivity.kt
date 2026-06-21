@@ -1,6 +1,8 @@
 package com.mixelith
 
 import android.content.Intent
+import com.mixelith.image.HeifExportBridge
+import com.mixelith.image.ImageNormalizerBridge
 import com.mixelith.onnx.OnnxModelImportBridge
 import com.mixelith.onnx.OnnxStyleTransferBridge
 import com.mixelith.picker.BatchImagePickerBridge
@@ -18,6 +20,14 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             OnnxStyleTransferBridge.channelName,
         ).setMethodCallHandler(OnnxStyleTransferBridge(applicationContext))
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ImageNormalizerBridge.channelName,
+        ).setMethodCallHandler(ImageNormalizerBridge(applicationContext))
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            HeifExportBridge.channelName,
+        ).setMethodCallHandler(HeifExportBridge())
         val importBridge = OnnxModelImportBridge(this, applicationContext)
         onnxModelImportBridge = importBridge
         MethodChannel(

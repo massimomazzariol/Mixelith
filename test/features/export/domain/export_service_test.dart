@@ -6,6 +6,7 @@ import 'package:mixelith/features/editor/domain/applied_filter.dart';
 import 'package:mixelith/features/editor/domain/working_image.dart';
 import 'package:mixelith/features/export/domain/export_service.dart';
 import 'package:mixelith/features/export/domain/export_settings.dart';
+import 'package:mixelith/features/export/domain/heif_export_encoder.dart';
 import 'package:mixelith/filters/presets/default_filter_presets.dart';
 import 'package:mixelith/filters/registry/default_filter_registry.dart';
 
@@ -92,6 +93,66 @@ void main() {
     expect(decoded.height, 20);
   });
 
+  test(
+    'exports HEIC through the native HEIF encoder with JPEG fallback ready',
+    () async {
+      final heifEncoder = _FakeHeifExportEncoder();
+      final heifService = ExportService(
+        cacheService: FakeCacheService(baseDirectory),
+        filterRegistry: const DefaultFilterRegistry(),
+        heifExportEncoder: heifEncoder,
+      );
+
+      final prepared = await heifService.prepareExport(
+        workingImage: _workingImage(sourceFile.path, 100, 50),
+        filterStack: [_appliedFilter(neonHeatFilterId)],
+        settings: const ExportSettings(format: ExportFormat.heic),
+      );
+
+      expect(prepared.format, ExportFormat.heic);
+      expect(prepared.path, endsWith('.heic'));
+      expect(prepared.fallbackPath, isNotNull);
+      expect(prepared.fallbackFormat, ExportFormat.jpeg);
+      expect(heifEncoder.requests.single.inputPath, endsWith('.jpg'));
+      expect(heifEncoder.requests.single.outputPath, endsWith('.heic'));
+    },
+  );
+
+  test('falls back to JPEG when HEIC encoder is unavailable', () async {
+    final prepared = await service.prepareExport(
+      workingImage: _workingImage(sourceFile.path, 100, 50),
+      filterStack: [_appliedFilter(popPosterFilterId)],
+      settings: const ExportSettings(format: ExportFormat.heic),
+    );
+
+    expect(prepared.format, ExportFormat.jpeg);
+    expect(prepared.path, endsWith('.jpg'));
+    expect(
+      prepared.fallbackMessage,
+      'This photo was exported as JPEG because HEIC export is not available on this device.',
+    );
+  });
+
+  test('falls back to JPEG when HEIC encoder fails', () async {
+    final heifService = ExportService(
+      cacheService: FakeCacheService(baseDirectory),
+      filterRegistry: const DefaultFilterRegistry(),
+      heifExportEncoder: const _FailingHeifExportEncoder(),
+    );
+
+    final prepared = await heifService.prepareExport(
+      workingImage: _workingImage(sourceFile.path, 100, 50),
+      filterStack: [_appliedFilter(mosaicFilterId)],
+      settings: const ExportSettings(format: ExportFormat.heif),
+    );
+
+    expect(prepared.format, ExportFormat.jpeg);
+    expect(
+      prepared.fallbackMessage,
+      'This photo was exported as JPEG because HEIF export is not available on this device.',
+    );
+  });
+
   test('rejects export without an applied filter stack', () async {
     await expectLater(
       service.prepareExport(
@@ -102,6 +163,42 @@ void main() {
       throwsA(isA<ExportServiceException>()),
     );
   });
+}
+
+class _FakeHeifExportEncoder implements HeifExportEncoder {
+  final List<_HeifRequest> requests = [];
+
+  @override
+  Future<HeifExportResult> encode({
+    required String inputPath,
+    required String outputPath,
+    required int quality,
+  }) async {
+    requests.add(_HeifRequest(inputPath, outputPath, quality));
+    await File(outputPath).writeAsBytes([1, 2, 3], flush: true);
+    return HeifExportResult(path: outputPath, width: 100, height: 50);
+  }
+}
+
+class _FailingHeifExportEncoder implements HeifExportEncoder {
+  const _FailingHeifExportEncoder();
+
+  @override
+  Future<HeifExportResult> encode({
+    required String inputPath,
+    required String outputPath,
+    required int quality,
+  }) async {
+    throw const HeifExportEncoderException('no encoder');
+  }
+}
+
+class _HeifRequest {
+  const _HeifRequest(this.inputPath, this.outputPath, this.quality);
+
+  final String inputPath;
+  final String outputPath;
+  final int quality;
 }
 
 AppliedFilter _appliedFilter(String presetId) {

@@ -16,7 +16,7 @@ Mixelith is designed for local artistic photo filtering. Images stay on the devi
 
 Photos selected or captured by the user are copied into app-private cache before editing. The original file is not modified.
 
-Exports are re-encoded as JPEG or PNG before being saved to the gallery. Because the export is produced from pixels, original image metadata is not copied into the saved result.
+Exports are re-encoded before being saved to the gallery. Because the export is produced from pixels, original image metadata is not copied into the saved result.
 
 ## Android Permissions
 

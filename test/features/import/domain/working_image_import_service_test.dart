@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
+import 'package:mixelith/features/import/domain/image_normalizer.dart';
 import 'package:mixelith/features/import/domain/working_image_import_service.dart';
+import 'package:mixelith/media/domain/image_source_format.dart';
 import 'package:mixelith/media/domain/media_asset.dart';
 import 'package:mixelith/media/domain/media_asset_availability.dart';
 import 'package:mixelith/media/domain/media_asset_file.dart';
@@ -108,6 +110,88 @@ void main() {
     },
   );
 
+  test('routes HEIC imports through native normalization', () async {
+    final sourceFile = File(
+      '${baseDirectory.path}${Platform.pathSeparator}source.heic',
+    );
+    await sourceFile.writeAsBytes([1, 2, 3, 4], flush: true);
+    final normalizedOriginal = File(
+      '${baseDirectory.path}${Platform.pathSeparator}normalized.jpg',
+    );
+    final normalizedPreview = File(
+      '${baseDirectory.path}${Platform.pathSeparator}preview.jpg',
+    );
+    await normalizedOriginal.writeAsBytes(
+      img.encodeJpg(img.Image(width: 64, height: 48)),
+    );
+    await normalizedPreview.writeAsBytes(
+      img.encodeJpg(img.Image(width: 32, height: 24)),
+    );
+    final normalizer = _FakeImageNormalizer(
+      result: ImageNormalizationResult(
+        originalPath: normalizedOriginal.path,
+        previewPath: normalizedPreview.path,
+        originalWidth: 4000,
+        originalHeight: 3000,
+        previewWidth: 1080,
+        previewHeight: 810,
+        wasPreviewDownscaled: true,
+      ),
+    );
+    final service = WorkingImageImportService(
+      mediaRepository: FakeMediaRepository(
+        permissionStatus: MediaPermissionStatus.authorized,
+      ),
+      cacheService: cacheService,
+      imageNormalizer: normalizer,
+    );
+
+    final workingImage = await service.importFromFilePath(
+      sourcePath: sourceFile.path,
+      sourceAssetId: 'heic-test',
+      extension: 'heic',
+    );
+
+    expect(normalizer.calls, hasLength(1));
+    expect(normalizer.calls.single, endsWith('.heic'));
+    expect(workingImage.originalTempPath, normalizedOriginal.path);
+    expect(workingImage.previewPath, normalizedPreview.path);
+    expect(workingImage.originalWidth, 4000);
+    expect(workingImage.previewWidth, 1080);
+    expect(workingImage.originalExtension, 'heic');
+    expect(workingImage.effectiveSourceFormat, ImageSourceFormat.heic);
+    expect(await sourceFile.readAsBytes(), [1, 2, 3, 4]);
+  });
+
+  test('reports a clear HEIC import error when normalization fails', () async {
+    final sourceFile = File(
+      '${baseDirectory.path}${Platform.pathSeparator}broken.heif',
+    );
+    await sourceFile.writeAsBytes([9, 8, 7], flush: true);
+    final service = WorkingImageImportService(
+      mediaRepository: FakeMediaRepository(
+        permissionStatus: MediaPermissionStatus.authorized,
+      ),
+      cacheService: cacheService,
+      imageNormalizer: const _FailingImageNormalizer(),
+    );
+
+    await expectLater(
+      service.importFromFilePath(
+        sourcePath: sourceFile.path,
+        sourceAssetId: 'heif-broken',
+        extension: 'heif',
+      ),
+      throwsA(
+        isA<WorkingImageImportException>().having(
+          (error) => error.message,
+          'message',
+          'This HEIC photo could not be imported on this device.',
+        ),
+      ),
+    );
+  });
+
   test('reports cloud-only assets without writing cache files', () async {
     final asset = _asset(
       'asset-cloud',
@@ -140,6 +224,36 @@ void main() {
       ),
     );
   });
+}
+
+class _FakeImageNormalizer implements ImageNormalizer {
+  _FakeImageNormalizer({required this.result});
+
+  final ImageNormalizationResult result;
+  final List<String> calls = [];
+
+  @override
+  Future<ImageNormalizationResult> normalizeHeif({
+    required String sourcePath,
+    required int previewMaxLongSide,
+  }) async {
+    calls.add(sourcePath);
+    return result;
+  }
+}
+
+class _FailingImageNormalizer implements ImageNormalizer {
+  const _FailingImageNormalizer();
+
+  @override
+  Future<ImageNormalizationResult> normalizeHeif({
+    required String sourcePath,
+    required int previewMaxLongSide,
+  }) async {
+    throw const ImageNormalizerException(
+      'This HEIC photo could not be imported on this device.',
+    );
+  }
 }
 
 MediaAsset _asset(

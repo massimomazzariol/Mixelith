@@ -1,3 +1,5 @@
+import '../../../media/domain/image_source_format.dart';
+
 class WorkingImage {
   const WorkingImage({
     required this.sourceAssetId,
@@ -10,6 +12,7 @@ class WorkingImage {
     required this.createdAt,
     required this.wasPreviewDownscaled,
     required this.originalExtension,
+    this.sourceFormat = ImageSourceFormat.unknown,
   });
 
   final String sourceAssetId;
@@ -22,4 +25,12 @@ class WorkingImage {
   final DateTime createdAt;
   final bool wasPreviewDownscaled;
   final String originalExtension;
+  final ImageSourceFormat sourceFormat;
+
+  ImageSourceFormat get effectiveSourceFormat {
+    if (sourceFormat != ImageSourceFormat.unknown) {
+      return sourceFormat;
+    }
+    return imageSourceFormatFromExtension(originalExtension);
+  }
 }

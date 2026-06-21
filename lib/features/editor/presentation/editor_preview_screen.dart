@@ -246,8 +246,16 @@ class _ExportBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _ExportBottomSheetState extends ConsumerState<_ExportBottomSheet> {
-  ExportFormat _format = ExportFormat.jpeg;
+  late ExportFormat _format;
   double _jpegQuality = 90;
+
+  @override
+  void initState() {
+    super.initState();
+    _format = defaultExportFormatForSourceFormat(
+      widget.workingImage.effectiveSourceFormat,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -309,13 +317,7 @@ class _ExportBottomSheetState extends ConsumerState<_ExportBottomSheet> {
                 ),
                 const SizedBox(height: 14),
                 SegmentedButton<ExportFormat>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ExportFormat.jpeg,
-                      label: Text('JPEG'),
-                    ),
-                    ButtonSegment(value: ExportFormat.png, label: Text('PNG')),
-                  ],
+                  segments: _formatSegments(),
                   selected: {_format},
                   onSelectionChanged: exportState.isBusy
                       ? null
@@ -324,13 +326,13 @@ class _ExportBottomSheetState extends ConsumerState<_ExportBottomSheet> {
                           ref.read(exportControllerProvider.notifier).reset();
                         },
                 ),
-                if (_format == ExportFormat.jpeg) ...[
+                if (_format != ExportFormat.png) ...[
                   const SizedBox(height: 18),
                   Row(
                     children: [
                       Expanded(
                         child: Text(
-                          'JPEG quality',
+                          '${_format.label} quality',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
@@ -413,6 +415,18 @@ class _ExportBottomSheetState extends ConsumerState<_ExportBottomSheet> {
         ),
       ),
     );
+  }
+
+  List<ButtonSegment<ExportFormat>> _formatSegments() {
+    final sourceDefault = defaultExportFormatForSourceFormat(
+      widget.workingImage.effectiveSourceFormat,
+    );
+    return [
+      const ButtonSegment(value: ExportFormat.jpeg, label: Text('JPEG')),
+      const ButtonSegment(value: ExportFormat.png, label: Text('PNG')),
+      if (sourceDefault.requiresHeifEncoder)
+        ButtonSegment(value: sourceDefault, label: Text(sourceDefault.label)),
+    ];
   }
 }
 
@@ -1246,7 +1260,7 @@ class _ImageInfoSheet extends StatelessWidget {
         'Preview size',
         '${workingImage.previewWidth} x ${workingImage.previewHeight}',
       ),
-      ('Format', workingImage.originalExtension.toUpperCase()),
+      ('Format', workingImage.effectiveSourceFormat.displayLabel),
       (
         'Mode',
         state.activeMode == EditorOutputMode.onnx ? 'ONNX' : 'Procedural',

@@ -7,6 +7,7 @@ import 'package:mixelith/features/editor/domain/applied_filter.dart';
 import 'package:mixelith/app/providers.dart';
 import 'package:mixelith/features/editor/domain/working_image.dart';
 import 'package:mixelith/features/export/domain/export_prepared_file.dart';
+import 'package:mixelith/features/export/domain/export_repository.dart';
 import 'package:mixelith/features/export/domain/export_save_result.dart';
 import 'package:mixelith/features/export/domain/export_service.dart';
 import 'package:mixelith/features/export/domain/export_settings.dart';
@@ -88,6 +89,40 @@ void main() {
     expect(state.message, 'Unable to save export.');
     expect(repository.requests.single.format, ExportFormat.png);
   });
+
+  test(
+    'ExportController retries HEIC gallery failures with JPEG fallback',
+    () async {
+      final repository = _RetryExportRepository();
+      final service = _HeicPreparedExportService(baseDirectory);
+      final container = ProviderContainer(
+        overrides: [
+          exportServiceProvider.overrideWithValue(service),
+          exportRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(exportControllerProvider.notifier)
+          .exportImage(
+            workingImage: _workingImage(sourceFile.path),
+            filterStack: [_appliedFilter(neonHeatFilterId)],
+            settings: const ExportSettings(format: ExportFormat.heic),
+          );
+
+      final state = container.read(exportControllerProvider);
+      expect(state.status, ExportStatus.success);
+      expect(
+        state.message,
+        'This photo was exported as JPEG because HEIC export is not available on this device.',
+      );
+      expect(repository.requests.map((request) => request.format), [
+        ExportFormat.heic,
+        ExportFormat.jpeg,
+      ]);
+    },
+  );
 
   test(
     'ExportController does not save when the filter stack is empty',
@@ -186,6 +221,70 @@ void main() {
       expect(repository.requests.single.format, ExportFormat.png);
     },
   );
+}
+
+class _RetryExportRepository implements ExportRepository {
+  final List<FakeExportSaveRequest> requests = [];
+
+  @override
+  Future<ExportSaveResult> saveImage({
+    required String filePath,
+    required String fileName,
+    required ExportFormat format,
+  }) async {
+    requests.add(
+      FakeExportSaveRequest(
+        filePath: filePath,
+        fileName: fileName,
+        format: format,
+      ),
+    );
+    if (format == ExportFormat.heic) {
+      return const ExportSaveResult.failure(
+        message: 'This export format is not supported by the gallery.',
+      );
+    }
+    return ExportSaveResult.success(savedPath: '/gallery/$fileName.jpg');
+  }
+}
+
+class _HeicPreparedExportService extends ExportService {
+  _HeicPreparedExportService(Directory baseDirectory)
+    : _baseDirectory = baseDirectory,
+      super(
+        cacheService: FakeCacheService(baseDirectory),
+        filterRegistry: const DefaultFilterRegistry(),
+      );
+
+  final Directory _baseDirectory;
+
+  @override
+  Future<ExportPreparedFile> prepareExport({
+    required WorkingImage workingImage,
+    required List<AppliedFilter> filterStack,
+    required ExportSettings settings,
+  }) async {
+    final heic = File(
+      '${_baseDirectory.path}${Platform.pathSeparator}prepared.heic',
+    );
+    final jpeg = File(
+      '${_baseDirectory.path}${Platform.pathSeparator}prepared.jpg',
+    );
+    await heic.writeAsBytes([1, 2, 3], flush: true);
+    await jpeg.writeAsBytes(img.encodeJpg(_sourceImage()), flush: true);
+    return ExportPreparedFile(
+      path: heic.path,
+      format: ExportFormat.heic,
+      width: 32,
+      height: 24,
+      wasResized: false,
+      usedPreviewFallback: false,
+      fallbackPath: jpeg.path,
+      fallbackFormat: ExportFormat.jpeg,
+      fallbackMessage:
+          'This photo was exported as JPEG because HEIC export is not available on this device.',
+    );
+  }
 }
 
 AppliedFilter _appliedFilter(String presetId) {

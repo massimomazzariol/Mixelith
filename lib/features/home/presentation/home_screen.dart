@@ -17,7 +17,7 @@ import '../../../shared/widgets/mixelith_gradient_logo.dart';
 import '../../../shared/widgets/mixelith_loading_overlay.dart';
 import '../../../shared/widgets/mixelith_screen_scaffold.dart';
 
-const _homeVersionLabel = 'v0.1.0';
+const _homeVersionLabel = 'v0.1.1';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

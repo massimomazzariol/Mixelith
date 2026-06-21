@@ -16,7 +16,7 @@ These screenshots use a generated demo image and do not include personal photos 
 
 ## What It Does
 
-Mixelith is an Android-first Flutter photo filtering app focused on local artistic image transformations. It lets you open or capture photos, apply included procedural looks, compare original and edited results, and export JPEG or PNG files back to the device.
+Mixelith is an Android-first Flutter photo filtering app focused on local artistic image transformations. It lets you open or capture photos, apply included procedural looks, compare original and edited results, and export JPEG, PNG, HEIC, or HEIF files back to the device.
 
 The 0.1.0 release also includes local ONNX model import support for compatible user-provided models.
 
@@ -27,7 +27,7 @@ The 0.1.0 release also includes local ONNX model import support for compatible u
 - Single-image editor with original/edited comparison.
 - Procedural filter stack with included artistic presets.
 - Batch export flow for applying a selected procedural filter or compatible local ONNX model to multiple photos.
-- JPEG and PNG export.
+- JPEG, PNG, HEIC, and HEIF export.
 - Re-encoded output files so source image metadata is not carried into exports.
 - Local ONNX model management for user-provided compatible models.
 
@@ -42,11 +42,11 @@ The 0.1.0 release also includes local ONNX model import support for compatible u
 - Images stay on the device.
 - Imported model files stay local to the device.
 
-## Current Status: 0.1.0
+## Current Status: 0.1.1
 
-Mixelith 0.1.0 is the first public release. The app is usable for local procedural filters and early local ONNX model testing, but it is not a polished app store build yet.
+Mixelith 0.1.1 is a bugfix release focused on HEIC/HEIF support. The app is usable for local procedural filters and early local ONNX model testing, but it is not a polished app store build yet.
 
-The validated Android version is `0.1.0+1`, with `versionName` `0.1.0` and `versionCode` `1`.
+The validated Android version is `0.1.1+2`, with `versionName` `0.1.1` and `versionCode` `2`.
 
 ## Included Procedural Filters
 
@@ -121,6 +121,7 @@ Additional design, architecture, and validation notes live in [`docs/`](docs/).
 - [Privacy and offline design](docs/PRIVACY_AND_OFFLINE.md)
 - [Known limitations](docs/KNOWN_LIMITATIONS.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Release notes 0.1.1](docs/RELEASE_NOTES_0.1.1.md)
 - [Release notes 0.1.0](docs/RELEASE_NOTES_0.1.0.md)
 - [Third-party licenses and attribution](docs/THIRD_PARTY_LICENSES.md)
 
@@ -162,7 +163,7 @@ build/app/outputs/flutter-apk/app-release.apk
 
 - The release is Android-first; other platforms are development targets only.
 - Local ONNX model compatibility is still experimental and depends on model shape/runtime behavior.
-- Batch export is intentionally simple in the 0.1.0 release.
+- Batch export is intentionally simple in this release.
 - No ONNX model training/export tooling is included in this repository.
 - No app store packaging is included in this release.
 

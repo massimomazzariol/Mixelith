@@ -5,21 +5,26 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 
 import '../../../core/policy/image_size_policy.dart';
+import '../../../media/domain/image_source_format.dart';
 import '../../../media/domain/media_asset.dart';
 import '../../../media/domain/media_asset_availability.dart';
 import '../../../media/domain/media_repository.dart';
 import '../../../storage/domain/cache_service.dart';
 import '../../editor/domain/working_image.dart';
+import 'image_normalizer.dart';
 
 class WorkingImageImportService {
   const WorkingImageImportService({
     required MediaRepository mediaRepository,
     required CacheService cacheService,
+    ImageNormalizer? imageNormalizer,
   }) : _mediaRepository = mediaRepository,
-       _cacheService = cacheService;
+       _cacheService = cacheService,
+       _imageNormalizer = imageNormalizer;
 
   final MediaRepository _mediaRepository;
   final CacheService _cacheService;
+  final ImageNormalizer? _imageNormalizer;
 
   Future<WorkingImage> importAsset(MediaAsset asset) async {
     final sourceFile = await _mediaRepository.getOriginalFile(asset);
@@ -94,10 +99,20 @@ class WorkingImageImportService {
     required String sourceAssetId,
     required String extension,
   }) async {
+    final sourceFormat = imageSourceFormatFromExtension(extension);
     final originalTempPath = await _cacheService.copyTempFileFromPath(
       sourcePath,
       extension,
     );
+    if (sourceFormat.isHeifFamily) {
+      return _importHeifFile(
+        sourcePath: originalTempPath,
+        sourceAssetId: sourceAssetId,
+        extension: extension,
+        sourceFormat: sourceFormat,
+      );
+    }
+
     final preview = await _generatePreview(originalTempPath);
     final previewPath = await _cacheService.writeTempFile(
       preview.bytes,
@@ -115,7 +130,55 @@ class WorkingImageImportService {
       createdAt: DateTime.now(),
       wasPreviewDownscaled: preview.wasDownscaled,
       originalExtension: extension,
+      sourceFormat: sourceFormat,
     );
+  }
+
+  Future<WorkingImage> _importHeifFile({
+    required String sourcePath,
+    required String sourceAssetId,
+    required String extension,
+    required ImageSourceFormat sourceFormat,
+  }) async {
+    final normalizer = _imageNormalizer;
+    if (normalizer == null) {
+      throw const WorkingImageImportException(
+        WorkingImageImportFailure.previewGenerationFailed,
+        'This HEIC photo could not be imported on this device.',
+      );
+    }
+
+    try {
+      final normalized = await normalizer.normalizeHeif(
+        sourcePath: sourcePath,
+        previewMaxLongSide: ImageSizePolicy.previewMaxLongSide.toInt(),
+      );
+      return WorkingImage(
+        sourceAssetId: sourceAssetId,
+        originalTempPath: normalized.originalPath,
+        previewPath: normalized.previewPath,
+        originalWidth: normalized.originalWidth,
+        originalHeight: normalized.originalHeight,
+        previewWidth: normalized.previewWidth,
+        previewHeight: normalized.previewHeight,
+        createdAt: DateTime.now(),
+        wasPreviewDownscaled: normalized.wasPreviewDownscaled,
+        originalExtension: extension,
+        sourceFormat: sourceFormat,
+      );
+    } on ImageNormalizerException catch (error) {
+      throw WorkingImageImportException(
+        WorkingImageImportFailure.previewGenerationFailed,
+        error.message,
+        error,
+      );
+    } catch (error) {
+      throw WorkingImageImportException(
+        WorkingImageImportFailure.previewGenerationFailed,
+        'This HEIC photo could not be imported on this device.',
+        error,
+      );
+    }
   }
 
   Future<_GeneratedPreview> _generatePreview(String sourcePath) async {

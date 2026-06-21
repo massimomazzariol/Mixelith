@@ -5,9 +5,12 @@ import '../../../app/providers.dart';
 import '../../editor/domain/applied_filter.dart';
 import '../../editor/domain/working_image.dart';
 import '../../editor/providers/editor_controller.dart';
+import '../data/android_heif_export_encoder.dart';
 import '../data/dev_export_repository.dart';
 import '../data/gal_export_repository.dart';
+import '../domain/export_prepared_file.dart';
 import '../domain/export_repository.dart';
+import '../domain/export_save_result.dart';
 import '../domain/export_service.dart';
 import '../domain/export_settings.dart';
 import '../domain/export_state.dart';
@@ -26,6 +29,10 @@ final exportServiceProvider = Provider<ExportService>(
   (ref) => ExportService(
     cacheService: ref.watch(cacheServiceProvider),
     filterRegistry: ref.watch(filterRegistryProvider),
+    heifExportEncoder: switch (defaultTargetPlatform) {
+      TargetPlatform.android => const AndroidHeifExportEncoder(),
+      _ => null,
+    },
   ),
 );
 
@@ -92,13 +99,7 @@ class ExportController extends Notifier<ExportState> {
         usedPreviewFallback: prepared.usedPreviewFallback,
       );
 
-      final result = await ref
-          .read(exportRepositoryProvider)
-          .saveImage(
-            filePath: prepared.path,
-            fileName: _exportFileName(),
-            format: prepared.format,
-          );
+      final result = await _savePrepared(prepared);
 
       state = state.copyWith(
         status: result.success ? ExportStatus.success : ExportStatus.error,
@@ -167,13 +168,7 @@ class ExportController extends Notifier<ExportState> {
         usedPreviewFallback: prepared.usedPreviewFallback,
       );
 
-      final result = await ref
-          .read(exportRepositoryProvider)
-          .saveImage(
-            filePath: prepared.path,
-            fileName: _exportFileName(),
-            format: prepared.format,
-          );
+      final result = await _savePrepared(prepared);
 
       state = state.copyWith(
         status: result.success ? ExportStatus.success : ExportStatus.error,
@@ -194,5 +189,43 @@ class ExportController extends Notifier<ExportState> {
 
   String _exportFileName() {
     return 'mixelith_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  Future<ExportSaveResult> _savePrepared(ExportPreparedFile prepared) async {
+    final fileName = _exportFileName();
+    final repository = ref.read(exportRepositoryProvider);
+    final result = await repository.saveImage(
+      filePath: prepared.path,
+      fileName: fileName,
+      format: prepared.format,
+    );
+    if (result.success) {
+      if (prepared.fallbackMessage != null &&
+          prepared.format == ExportFormat.jpeg) {
+        return ExportSaveResult.success(
+          savedPath: result.savedPath,
+          message: prepared.fallbackMessage,
+        );
+      }
+      return result;
+    }
+
+    if (!prepared.hasFallback) {
+      return result;
+    }
+
+    final fallbackResult = await repository.saveImage(
+      filePath: prepared.fallbackPath!,
+      fileName: fileName,
+      format: prepared.fallbackFormat!,
+    );
+    if (!fallbackResult.success) {
+      return result;
+    }
+
+    return ExportSaveResult.success(
+      savedPath: fallbackResult.savedPath,
+      message: prepared.fallbackMessage,
+    );
   }
 }

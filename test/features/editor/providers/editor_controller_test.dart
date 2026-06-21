@@ -494,4 +494,9 @@ class _NoopCacheService implements CacheService {
   Future<String> writeTempFile(List<int> bytes, String extension) async {
     return 'unused.$extension';
   }
+
+  @override
+  Future<String> reserveTempFilePath(String extension) async {
+    return 'reserved.$extension';
+  }
 }

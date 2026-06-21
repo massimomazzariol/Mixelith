@@ -65,6 +65,9 @@ ProcessedFilterImage _processFilterImageInBackground(
     request['parameters']! as Map<dynamic, dynamic>,
   );
   final format = ExportFormat.values.byName(request['format']! as String);
+  final encodingFormat = format.requiresHeifEncoder
+      ? ExportFormat.jpeg
+      : format;
   final jpegQuality = request['jpegQuality']! as int;
   final maxLongSide = request['maxLongSide'] as double?;
 
@@ -86,23 +89,27 @@ ProcessedFilterImage _processFilterImageInBackground(
     _ => throw ArgumentError.value(presetId, 'presetId', 'Unknown filter'),
   };
 
-  final encoded = switch (format) {
+  final encoded = switch (encodingFormat) {
     ExportFormat.jpeg => Uint8List.fromList(
       img.encodeJpg(output, quality: jpegQuality.clamp(1, 100)),
     ),
     ExportFormat.png => Uint8List.fromList(img.encodePng(output)),
+    ExportFormat.heic || ExportFormat.heif => throw StateError(
+      'HEIC output must be encoded by the native export bridge.',
+    ),
   };
 
   return ProcessedFilterImage(
     bytes: encoded,
     width: output.width,
     height: output.height,
-    mimeType: switch (format) {
+    mimeType: switch (encodingFormat) {
       ExportFormat.jpeg => 'image/jpeg',
       ExportFormat.png => 'image/png',
+      ExportFormat.heic || ExportFormat.heif => 'application/octet-stream',
     },
     wasDownscaled: resized.wasDownscaled,
-    outputFormat: format,
+    outputFormat: encodingFormat,
   );
 }
 

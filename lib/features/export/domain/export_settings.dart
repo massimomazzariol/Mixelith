@@ -1,16 +1,41 @@
 import '../../../core/policy/image_size_policy.dart';
+import '../../../media/domain/image_source_format.dart';
 
-enum ExportFormat { jpeg, png }
+enum ExportFormat { jpeg, png, heic, heif }
 
 extension ExportFormatDetails on ExportFormat {
   String get fileExtension => switch (this) {
     ExportFormat.jpeg => 'jpg',
     ExportFormat.png => 'png',
+    ExportFormat.heic => 'heic',
+    ExportFormat.heif => 'heif',
   };
 
   String get mimeType => switch (this) {
     ExportFormat.jpeg => 'image/jpeg',
     ExportFormat.png => 'image/png',
+    ExportFormat.heic => 'image/heic',
+    ExportFormat.heif => 'image/heif',
+  };
+
+  String get label => switch (this) {
+    ExportFormat.jpeg => 'JPEG',
+    ExportFormat.png => 'PNG',
+    ExportFormat.heic => 'HEIC',
+    ExportFormat.heif => 'HEIF',
+  };
+
+  bool get requiresHeifEncoder {
+    return this == ExportFormat.heic || this == ExportFormat.heif;
+  }
+}
+
+ExportFormat defaultExportFormatForSourceFormat(ImageSourceFormat format) {
+  return switch (format) {
+    ImageSourceFormat.png => ExportFormat.png,
+    ImageSourceFormat.heic => ExportFormat.heic,
+    ImageSourceFormat.heif => ExportFormat.heif,
+    _ => ExportFormat.jpeg,
   };
 }
 

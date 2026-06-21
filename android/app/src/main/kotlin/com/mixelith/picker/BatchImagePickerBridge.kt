@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -14,6 +15,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.Locale
+import kotlin.math.max
 
 class BatchImagePickerBridge(
     private val activity: Activity,
@@ -187,7 +189,8 @@ class BatchImagePickerBridge(
 
     private fun importUri(uri: Uri, index: Int): Map<String, Any?> {
         val displayName = displayName(uri) ?: "photo_${index + 1}"
-        val extension = extension(displayName, context.contentResolver.getType(uri))
+        val mimeType = context.contentResolver.getType(uri)
+        val extension = extension(displayName, mimeType)
         val directory = File(context.cacheDir, "batch_picker")
         directory.mkdirs()
         val target = File(
@@ -214,6 +217,7 @@ class BatchImagePickerBridge(
             "path" to target.absolutePath,
             "displayName" to displayName,
             "extension" to extension,
+            "mimeType" to mimeType,
             "width" to dimensions.first,
             "height" to dimensions.second,
         )
@@ -224,7 +228,25 @@ class BatchImagePickerBridge(
             inJustDecodeBounds = true
         }
         BitmapFactory.decodeFile(file.absolutePath, options)
-        return Pair(options.outWidth, options.outHeight)
+        if (options.outWidth > 0 && options.outHeight > 0) {
+            return Pair(options.outWidth, options.outHeight)
+        }
+        return imageDecoderDimensions(file)
+    }
+
+    private fun imageDecoderDimensions(file: File): Pair<Int, Int> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return Pair(0, 0)
+        }
+        var width = 0
+        var height = 0
+        ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, info, _ ->
+            width = info.size.width
+            height = info.size.height
+            val sampleSize = max(1, max(width, height) / 512)
+            decoder.setTargetSampleSize(sampleSize)
+        }
+        return Pair(width, height)
     }
 
     private fun displayName(uri: Uri): String? {
